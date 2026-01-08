@@ -1,0 +1,327 @@
+body {
+    margin: 10px;
+    padding: 10px;
+  overflow-x: hidden; /* 横スクロール禁止 */
+  font-family: sans-serif;
+}
+
+:root {
+  --calendar-date-font: system-ui;
+}
+
+#appContainer {
+  max-width: 100vw; /* 横幅制限 */
+  box-sizing: border-box;
+  padding: 10px;
+}
+h2 { margin-top: 30px; }
+
+/* 登録スタンプ表示 */
+#stampGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(48px, 1fr));
+  gap: 6px;
+  align-items: center;
+}
+
+.stampItem {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  cursor: pointer;
+  border-radius: 10px;
+  align-items: center;
+  justify-content: center;
+}
+
+.stampItem:active {
+  transform: scale(0.95);
+}
+
+
+.stampItem img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  border-radius: 8px;
+}
+
+.stamp-preview {
+  width: 80px;
+  height: 80px;
+  margin-top: 10px;
+  object-fit: contain;
+  pointer-events: none;
+
+  /* 縁用のCSS変数 */
+  --border-enabled: 0;
+  --border-color: #000;
+  --border-width: 0px;
+
+  filter:
+    drop-shadow(
+      0 0
+      calc(var(--border-width) * var(--border-enabled))
+      var(--border-color)
+    );
+}
+
+/* モーダル */
+#stampPicker {
+}
+#stampPickerGrid {
+  background: #fff;
+  padding: 20px;
+  border-radius: 10px;
+  display: grid;
+  grid-template-columns: repeat(5, 1fr); /* 横5列 */
+  gap: 10px;
+  justify-content: center;
+}
+
+#stampPickerGrid img {
+  width: 64px; height: 64px;
+  object-fit: cover;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.stamp-picker-content {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+
+#stampSizeContainer {
+    padding: 10px;
+    border-radius: 10px;
+}
+
+.week-row {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr); /* 7列で均等幅 */
+  margin-bottom: 5px;
+}
+
+.week-row .weekday {
+  text-align: center;
+  font-weight: bold;
+  padding: 2px 0;
+  border-bottom: 1px solid #ccc; /* optional */
+}
+
+/* カレンダーグリッド調整 */
+.calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr)); /* 7列を均等に広げる */
+  gap: 2px;
+}
+
+.calendar-grid .stamp {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  border: 1px solid #ccc;
+  width: 100%;
+  aspect-ratio: 1/1;
+}
+.calendar-grid .stamp .date-label {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  background: rgba(255,255,255,0.5);
+  padding: 1px 3px;
+  font-size: 10px;
+  font-weight: bold;
+  z-index: 2;
+  border-radius: 2px;
+  font-family: var(--calendar-date-font);
+  font-weight: bold;
+}
+.calendar-grid .stamp img {
+  width: 90%;
+  height: 90%;
+  object-fit: cover;
+  border-radius: 6px;
+  margin: auto;
+  z-index: 1;
+  pointer-events: none;
+}
+
+/* 月タイトル・コンテナ */
+.month-container {
+  position: relative;
+  margin-bottom: 40px;
+  border-radius: 8px;
+  overflow: hidden;
+}
+.month-container .bg-layer {
+  position: absolute;
+  top:0; left:0; right:0; bottom:0;
+  background-size: cover;
+  background-position: center;
+  z-index: 0;
+  pointer-events: none;
+  filter: brightness(1);
+  opacity: 1;
+}
+
+.month-container .bg-layer img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: brightness(1);
+  opacity: 1;
+}
+
+.month-container .content-layer {
+  position: relative;
+  z-index: 1;
+  padding: 10px;
+}
+
+/* 月ごとのスタンプ使用回数 */
+.month-stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin-top: 10px; /* ボード下部との余白 */
+  position: relative; /* 背景より前面に表示 */
+  z-index: 2;
+
+}
+.month-stats div {
+  text-align: center;
+  width: 50px;
+}
+.month-stats img {
+  width: 100%;
+  height: 40px;
+  object-fit: cover;
+  border-radius: 6px;
+}
+.month-stats span {
+  display: block;
+  font-size: 12px;
+  text-align: center;
+}
+
+/* 背景スライダー縦配置（横スライダー） */
+.bg-controls {
+  display: flex;
+  flex-direction: column;  /* 縦に並べる */
+  gap: 10px;
+  width: 120px;
+}
+.bg-controls label {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  font-size: 14px;
+}
+.bg-controls input[type=range] {
+  width: 100%; /* 横スライダー */
+  margin-top: 5px;
+}
+
+.bg-layer {
+  position: absolute;
+  top:0; left:0; right:0; bottom:0;
+  background-size: cover;
+  background-position: center;
+  z-index: 0;  /* content-layer は 1 */
+  pointer-events: none;
+}
+
+.content-layer {
+  position: relative;
+  z-index: 1;
+  padding: 10px;
+}
+
+.month-note {
+  width: 20%;
+  box-sizing: border-box;
+  margin-top: 5px;
+  margin-bottom: 5px;
+  margin-left: 10px;
+  padding: 5px;
+}
+
+body.modal-open {
+  overflow: hidden;
+  touch-action: none; /* ページ全体のピンチ・スクロール禁止 */
+}
+
+#cropCanvas {
+  touch-action: none; /* JSでピンチ制御しているのでOK */
+}
+
+#cropModal {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.7);
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+#cropModal > div {
+  max-width: 95vw;
+  max-height: 90vh;
+  overflow: hidden;
+}
+
+body.modal-open {
+  position: fixed;
+  width: 100%;
+  overflow: hidden;
+}
+
+.modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  display: none;              /* JSで flex にする */
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  background: #fff;
+  border-radius: 12px;
+  padding: 12px;
+  width: 90%;
+  max-width: 600px;   /* ← 画面横いっぱいにしない */
+  max-height: 80vh;
+  overflow-y: auto;
+}
+
+
+
+
+.help-open {
+  transition: opacity 0.3s;
+}
+
+/* 月タイトル */
+.content-layer h3 {
+  font-family: var(--calendar-date-font);
+}
+
+/* 曜日 */
+.weekday {
+  font-family: var(--calendar-date-font);
+}
+
+/* 日付数字 */
+.date-label {
+  font-family: var(--calendar-date-font);
+  font-size: 1.1em;
+  letter-spacing: 0.03em;
+}
+
