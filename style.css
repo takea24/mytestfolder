@@ -306,7 +306,6 @@ body.modal-open {
 
 .help-open {
   transition: opacity 0.3s;
-  z-index: 500;
 }
 
 /* 月タイトル */
@@ -326,3 +325,7 @@ body.modal-open {
   letter-spacing: 0.03em;
 }
 
+.floating-btn {
+  position: fixed;
+  z-index: 500;   /* cropModal より下 */
+}
