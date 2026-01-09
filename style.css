@@ -306,6 +306,7 @@ body.modal-open {
 
 .help-open {
   transition: opacity 0.3s;
+  z-index: 500;
 }
 
 /* 月タイトル */

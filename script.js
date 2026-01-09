@@ -34,7 +34,7 @@ let scrollPos = 0;
 
 function openModal(modal) {
   scrollPos = window.scrollY || window.pageYOffset;
-
+  setHelpButtonsVisible(false);
   // スクロール位置を保持したまま body を固定
   document.body.classList.add("modal-open");
   document.body.style.top = `-${scrollPos}px`;
@@ -44,7 +44,7 @@ function openModal(modal) {
 
 function closeModal(modal) {
   modal.style.display = "none";
-
+  setHelpButtonsVisible(true);
   // body を解放
   document.body.classList.remove("modal-open");
   document.body.style.top = "";
@@ -143,6 +143,12 @@ helpButtons.forEach(btn => {
   };
 });
 
+function setHelpButtonsVisible(visible) {
+  document.querySelectorAll(".floating-btn").forEach(btn => {
+    btn.style.opacity = visible ? "1" : "0";
+    btn.style.pointerEvents = visible ? "auto" : "none";
+  });
+}
 
 // スクロールでまとめて消す
 window.addEventListener("scroll", () => {
