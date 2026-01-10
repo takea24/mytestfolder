@@ -330,6 +330,3 @@ body.modal-open {
   z-index: 100;   /* cropModal より下 */
 }
 
-input, textarea, select {
-  font-size: 16px;
-}
