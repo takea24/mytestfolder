@@ -327,5 +327,9 @@ body.modal-open {
 
 .floating-btn {
   position: fixed;
-  z-index: 500;   /* cropModal より下 */
+  z-index: 100;   /* cropModal より下 */
+}
+
+input, textarea, select {
+  font-size: 16px;
 }
