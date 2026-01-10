@@ -179,190 +179,202 @@ document.querySelectorAll(".modal").forEach(modal => {
 });
 
 // ===== トリミングモーダル =====
-
-
 function openCropModal(
   file,
   callback,
   {
-    mode = "stamp",      // "stamp" | "background"
+    mode = "stamp", // "stamp" | "background"
     description = "ピンチとドラッグでトリミング"
   } = {}
 ) {
-  
-    
-    const borderEnable = document.getElementById("borderEnabled");
-    const borderColor  = document.getElementById("borderColor");
-    const borderSize   = document.getElementById("borderWidth");
+  // ===============================
+  // DOM 取得
+  // ===============================
+  const modal        = document.getElementById("cropModal");
+  const canvas       = document.getElementById("cropCanvas");
+  const ctx          = canvas.getContext("2d");
+  const memoArea     = document.getElementById("stampMemo");
 
-    // null 安全化
-    if (borderEnable) borderEnable.checked = false;
-    if (borderColor)  borderColor.value = "#ff4d6d";
-    if (borderSize)   borderSize.value = 4;
-    // 初期状態オブジェクト
-    const borderState = {
-      enabled: borderEnable?.checked ?? false,
-      color: borderColor?.value ?? "#ff4d6d",
-      size: parseInt(borderSize?.value ?? "4", 10)
-    };
+  const borderEnable  = document.getElementById("borderEnabled");
+  const borderColor   = document.getElementById("borderColor");
+  const borderSize    = document.getElementById("borderWidth");
+  const borderOptions = document.getElementById("borderOptions");
 
-    // イベント設定（null 安全）
-    if (borderEnable) borderEnable.onchange = () => { borderState.enabled = borderEnable.checked; requestDraw(); };
-    if (borderColor)  borderColor.oninput = () => { borderState.color = borderColor.value; requestDraw(); };
-    if (borderSize)   borderSize.oninput = () => { borderState.size = parseInt(borderSize.value, 10); requestDraw(); };
+  const shapePicker  = document.querySelector(".shape-picker");
 
-
-    
-  const modal = document.getElementById("cropModal");
-  const canvas = document.getElementById("cropCanvas");
-  const ctx = canvas.getContext("2d");
-  const memoArea = document.getElementById("stampMemo");
   memoArea.value = description;
 
-    const shapePicker = document.querySelector(".shape-picker");
-      if (shapePicker) {
-        shapePicker.style.display = (mode === "background") ? "none" : "";
-      }
+  // ===============================
+  // UI 表示切替
+  // ===============================
+  if (shapePicker) {
+    shapePicker.style.display = (mode === "background") ? "none" : "";
+  }
+  if (borderOptions) {
+    borderOptions.style.display = (mode === "background") ? "none" : "";
+  }
 
-    
+  // ===============================
+  // borderState 初期化
+  // ===============================
+  const borderState = {
+    enabled: false,
+    color: "#ff4d6d",
+    size: 4
+  };
+
+  if (borderEnable) borderEnable.checked = borderState.enabled;
+  if (borderColor)  borderColor.value   = borderState.color;
+  if (borderSize)   borderSize.value    = borderState.size;
+
+  function syncBorderUI() {
+    if (!borderEnable) return;
+    const disabled = !borderEnable.checked;
+    if (borderColor) borderColor.disabled = disabled;
+    if (borderSize)  borderSize.disabled  = disabled;
+  }
+
+  syncBorderUI();
+
+  // ===============================
+  // 再描画制御
+  // ===============================
+  let needsRedraw = false;
+  function requestDraw() {
+    if (!needsRedraw) {
+      needsRedraw = true;
+      requestAnimationFrame(() => {
+        needsRedraw = false;
+        draw();
+      });
+    }
+  }
+
+  // ===============================
+  // UI イベント
+  // ===============================
+  if (borderEnable) {
+    borderEnable.onchange = () => {
+      borderState.enabled = borderEnable.checked;
+      syncBorderUI();
+      requestDraw();
+    };
+  }
+
+  if (borderColor) {
+    borderColor.oninput = () => {
+      borderState.color = borderColor.value;
+      requestDraw();
+    };
+  }
+
+  if (borderSize) {
+    borderSize.oninput = () => {
+      borderState.size = parseInt(borderSize.value, 10);
+      requestDraw();
+    };
+  }
+
+  // ===============================
+  // 画像ロード
+  // ===============================
   const img = new Image();
 
   img.onload = () => {
-      console.log("画像ロード完了", img.width, img.height); // <- ここ追加
-      let needsRedraw = false;
-      
-      const borderState = {
-        enabled: borderEnable.checked,
-        color: borderColor.value,
-        size: parseInt(borderSize.value, 10)
-      };
-      
-      borderEnable.onchange = null;
-      borderColor.oninput = null;
-      borderSize.oninput = null;
+    // --- Canvas サイズ ---
+    const maxW = Math.min(window.innerWidth * 0.9, 900);
+    const maxH = Math.min(window.innerHeight * 0.7, 600);
 
-      borderEnable.onchange = () => {
-        borderState.enabled = borderEnable.checked;
-        requestDraw();
-      };
+    canvas.width  = (mode === "background") ? maxW : 300;
+    canvas.height = (mode === "background") ? maxH : 300;
 
-      borderColor.oninput = () => {
-        borderState.color = borderColor.value;
-        requestDraw();
-      };
-
-      borderSize.oninput = () => {
-        borderState.size = parseInt(borderSize.value, 10);
-        requestDraw();
-      };
-      
-      function requestDraw() {
-        if (!needsRedraw) {
-          needsRedraw = true;
-          requestAnimationFrame(() => {
-            needsRedraw = false;
-            draw();
-          });
-        }
-      }
-
-      const maxW = Math.min(window.innerWidth * 0.9, 900);
-      const maxH = Math.min(window.innerHeight * 0.7, 600);
-
-      const canvasWidth  = mode === "background" ? maxW : 300;
-      const canvasHeight = mode === "background" ? maxH : 300;
-
-      canvas.width  = canvasWidth;
-      canvas.height = canvasHeight;
-
-
+    // --- 位置・スケール ---
     let posX = 0, posY = 0, scale = 1;
     let startX = 0, startY = 0;
-    let isDragging = false, lastDist = 0;
+    let isDragging = false;
+    let lastDist = 0;
 
-      // ===== 初期フィット =====
-      const scaleX = canvas.width / img.width;
-      const scaleY = canvas.height / img.height;
-      scale = Math.max(scaleX, scaleY); // 背景は「はみ出してOK」
+    const scaleX = canvas.width  / img.width;
+    const scaleY = canvas.height / img.height;
+    scale = Math.max(scaleX, scaleY);
 
-      posX = (canvas.width  - img.width  * scale) / 2;
-      posY = (canvas.height - img.height * scale) / 2;
+    posX = (canvas.width  - img.width  * scale) / 2;
+    posY = (canvas.height - img.height * scale) / 2;
 
     function getSelectedShape() {
       return document.querySelector("input[name='clipShape']:checked")?.value || "square";
     }
 
-      const draw = () => {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
+    // ===============================
+    // 描画
+    // ===============================
+    function draw() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-        // 画像
-        ctx.drawImage(
-          img,
-          posX, posY,
-          img.width * scale,
-          img.height * scale
-        );
+      ctx.drawImage(
+        img,
+        posX, posY,
+        img.width * scale,
+        img.height * scale
+      );
 
-        if (mode === "stamp") {
-
-          // ===== 縁 =====
-          if (borderState.enabled && borderState.size > 0) {
-            ctx.save();
-            ctx.strokeStyle = borderState.color;
-            ctx.lineWidth = borderState.size;
-            drawGuidePath(ctx, getSelectedShape(), canvas.width);
-            ctx.stroke();
-            ctx.restore();
-          }
-
-          // ===== ガイド（常に最後）=====
+      if (mode === "stamp") {
+        // --- 縁 ---
+        if (borderState.enabled && borderState.size > 0) {
           ctx.save();
-          ctx.setLineDash([6, 4]);
-          ctx.strokeStyle = "rgba(0,0,0,0.6)";
-          ctx.lineWidth = 2;
+          ctx.strokeStyle = borderState.color;
+          ctx.lineWidth   = borderState.size;
           drawGuidePath(ctx, getSelectedShape(), canvas.width);
           ctx.stroke();
           ctx.restore();
         }
-      };
 
-
+        // --- ガイド ---
+        ctx.save();
+        ctx.setLineDash([6, 4]);
+        ctx.strokeStyle = "rgba(0,0,0,0.6)";
+        ctx.lineWidth = 2;
+        drawGuidePath(ctx, getSelectedShape(), canvas.width);
+        ctx.stroke();
+        ctx.restore();
+      }
+    }
 
     draw();
 
+    // ===============================
+    // 操作
+    // ===============================
     const getPos = e => e.touches ? e.touches[0] : e;
 
-      const startDrag = e => {
-        if (e.touches && e.touches.length === 2) {
-          const dx = e.touches[0].clientX - e.touches[1].clientX;
-          const dy = e.touches[0].clientY - e.touches[1].clientY;
-          lastDist = Math.hypot(dx, dy);
-          return;
-        }
+    const startDrag = e => {
+      if (e.touches && e.touches.length === 2) {
+        const dx = e.touches[0].clientX - e.touches[1].clientX;
+        const dy = e.touches[0].clientY - e.touches[1].clientY;
+        lastDist = Math.hypot(dx, dy);
+        return;
+      }
+      isDragging = true;
+      const p = getPos(e);
+      startX = p.clientX - posX;
+      startY = p.clientY - posY;
+    };
 
-        isDragging = true;
+    const moveDrag = e => {
+      if (e.touches && e.touches.length === 2) {
+        const dx = e.touches[0].clientX - e.touches[1].clientX;
+        const dy = e.touches[0].clientY - e.touches[1].clientY;
+        const dist = Math.hypot(dx, dy);
+        if (lastDist) scale *= dist / lastDist;
+        lastDist = dist;
+      } else if (isDragging) {
         const p = getPos(e);
-        startX = p.clientX - posX;
-        startY = p.clientY - posY;
-      };
-
-
-      const moveDrag = e => {
-        if (e.touches && e.touches.length === 2) {
-          const dx = e.touches[0].clientX - e.touches[1].clientX;
-          const dy = e.touches[0].clientY - e.touches[1].clientY;
-          const dist = Math.hypot(dx, dy);
-          if (lastDist) scale *= dist / lastDist;
-          lastDist = dist;
-        } else if (isDragging) {
-          const p = getPos(e);
-          posX = p.clientX - startX;
-          posY = p.clientY - startY;
-        }
-        requestDraw();   // ★ draw() ではなく
-        e.preventDefault();
-      };
-
+        posX = p.clientX - startX;
+        posY = p.clientY - startY;
+      }
+      requestDraw();
+      e.preventDefault();
+    };
 
     const endDrag = () => {
       isDragging = false;
@@ -370,71 +382,49 @@ function openCropModal(
     };
 
     ["mousedown", "touchstart"].forEach(ev => canvas.addEventListener(ev, startDrag));
-    ["mousemove", "touchmove"].forEach(ev => canvas.addEventListener(ev, moveDrag, { passive: false }));
+    ["mousemove", "touchmove"].forEach(ev => canvas.addEventListener(ev, moveDrag, { passive:false }));
     ["mouseup", "mouseleave", "touchend", "touchcancel"].forEach(ev => canvas.addEventListener(ev, endDrag));
 
-    // --- 保存 ---
-      document.getElementById("cropSaveBtn").onclick = () => {
-        const outCanvas = document.createElement("canvas");
-        outCanvas.width  = canvas.width;
-        outCanvas.height = canvas.height;
+    // ===============================
+    // 保存
+    // ===============================
+    document.getElementById("cropSaveBtn").onclick = () => {
+      const outCanvas = document.createElement("canvas");
+      outCanvas.width  = canvas.width;
+      outCanvas.height = canvas.height;
 
-        const outCtx = outCanvas.getContext("2d");
+      const outCtx = outCanvas.getContext("2d");
 
-        if (mode === "stamp") {
-          outCtx.save();
+      if (mode === "stamp") {
+        outCtx.save();
+        applyClip(outCtx, getSelectedShape(), outCanvas.width);
+        outCtx.drawImage(canvas, 0, 0);
 
-          // ===== クリッピング =====
-          applyClip(outCtx, getSelectedShape(), outCanvas.width);
-
-          // ===== 画像描画 =====
-          outCtx.drawImage(canvas, 0, 0);
-
-          // ===== 縁描画 =====
-          if (borderState.enabled && borderState.size > 0) {
-            outCtx.strokeStyle = borderState.color;
-            outCtx.lineWidth   = borderState.size;
-            outCtx.stroke();
-          }
-
-          outCtx.restore();
-
-          // ===== Blob 化して呼び出し元へ返す =====
-          outCanvas.toBlob(
-            blob => {
-                closeModal(modal);
-
-              callback(blob, {
-                border: {
-                  enabled: borderState.enabled,
-                  color: borderState.color,
-                  size:  borderState.size
-                }
-              });
-            },
-            "image/png"
-          );
-
-        } else {
-          // ===== background モード =====
-          outCtx.drawImage(canvas, 0, 0);
-
-          outCanvas.toBlob(
-            blob => {
-                closeModal(modal);
-              callback(blob);
-            },
-            "image/jpeg",
-            0.9
-          );
+        if (borderState.enabled && borderState.size > 0) {
+          outCtx.strokeStyle = borderState.color;
+          outCtx.lineWidth   = borderState.size;
+          outCtx.stroke();
         }
-      };
+        outCtx.restore();
+
+        outCanvas.toBlob(blob => {
+          closeModal(modal);
+          callback(blob, { border: { ...borderState } });
+        }, "image/png");
+
+      } else {
+        outCtx.drawImage(canvas, 0, 0);
+        outCanvas.toBlob(blob => {
+          closeModal(modal);
+          callback(blob);
+        }, "image/jpeg", 0.9);
+      }
+    };
   };
 
   img.src = URL.createObjectURL(file);
-    openModal(modal);
+  openModal(modal);
 }
-
 
 
 

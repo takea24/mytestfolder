@@ -178,44 +178,45 @@
     align-items:center;
   ">
   
-  <div class="shape-picker">
-    <label>
-      <input type="radio" name="clipShape" value="square" checked>
-      □
-    </label>
-    <label>
-      <input type="radio" name="clipShape" value="circle">
-      ◯
-    </label>
-    <label>
-      <input type="radio" name="clipShape" value="oval">
-      楕円
-    </label>
-    <label>
-      <input type="radio" name="clipShape" value="heart">
-      ❤
-    </label>
-    <label>
-      <input type="radio" name="clipShape" value="coffin">
-      ⚰
-    </label>
+  <div id="borderOptions">
+      <div class="shape-picker">
+          <label>
+              <input type="radio" name="clipShape" value="square" checked>
+                  □
+          </label>
+          <label>
+              <input type="radio" name="clipShape" value="circle">
+                  ◯
+          </label>
+          <label>
+              <input type="radio" name="clipShape" value="oval">
+                  楕円
+          </label>
+          <label>
+              <input type="radio" name="clipShape" value="heart">
+                  ❤
+          </label>
+          <label>
+              <input type="radio" name="clipShape" value="coffin">
+                  ⚰
+          </label>
+      </div>
+      
+      <label>
+          <input type="checkbox" id="borderEnabled">
+              縁をつける
+      </label>
+      
+      <label>
+          縁の色
+          <input type="color" id="borderColor" value="#ff0000">
+      </label>
+      
+      <label>
+          縁の太さ
+          <input type="range" id="borderWidth" min="1" max="20" value="10">
+      </label>
   </div>
-
-  <label>
-    <input type="checkbox" id="borderEnabled">
-    縁をつける
-  </label>
-
-  <label>
-    縁の色
-    <input type="color" id="borderColor" value="#ff0000">
-  </label>
-
-  <label>
-    縁の太さ
-    <input type="range" id="borderWidth" min="1" max="20" value="10">
-  </label>
-
   
     <canvas id="cropCanvas" class="zoomable" style="border:1px solid #ccc;"></canvas>
 
