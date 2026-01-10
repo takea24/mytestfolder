@@ -255,6 +255,10 @@ body.modal-open {
   touch-action: none; /* ページ全体のピンチ・スクロール禁止 */
 }
 
+body.modal-open .floating-btn {
+  display: none;
+}
+
 #cropCanvas {
   touch-action: none; /* JSでピンチ制御しているのでOK */
 }
