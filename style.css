@@ -341,14 +341,12 @@ section > h2 {
 
 /* ===== セクション内の小見出し（h3） ===== */
 section h3 {
-  font-size: 0.85rem;          /* 少し小さく */
+  font-size: 1.2rem;
   font-weight: 600;
   letter-spacing: 0.05em;
 
   margin-top: 24px;
   margin-bottom: 8px;
-
-  color: #666;
   
   display: inline-block;
   padding: 4px 10px;
