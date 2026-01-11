@@ -28,6 +28,8 @@ db.version(14).stores({
   }
 });
 
+const NOTICE_KEY = "update_notice_v1";
+
 
 let scrollPos = 0;
 
@@ -1073,6 +1075,30 @@ toggleBtn.onclick = () => {
     toggleBtn.textContent = "開く";
   }
 };
+
+// ===== アプデ注意書き =====
+
+
+(async () => {
+  const notice = await db.settings.get(NOTICE_KEY);
+  if (!notice) {
+    showUpdateNotice();
+    await db.settings.put({
+      key: NOTICE_KEY,
+      value: true
+    });
+  }
+})();
+
+function showUpdateNotice() {
+  alert(
+    "アップデートのお知らせ\n\n" +
+    "・スタンプ一覧は長押しで削除になりました\n" +
+    "・最初、画像の表示が?になるかもしれません"+
+    "・しばらくしてリロードすると直ります"
+  );
+}
+
 
 // ===== 初期化 =====
 loadStamps();
