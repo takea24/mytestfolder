@@ -414,15 +414,14 @@ section > h2 {
   justify-content: space-between;
 }
 
-/* 折りたたみ本体 */
+/* 折りたたみ設定 */
 #monthSettingsBody {
   overflow: hidden;
-  transition: max-height 0.3s ease, opacity 0.2s ease;
+  transition: height 0.3s ease, opacity 0.2s ease;
 }
 
-/* 閉じた状態 */
 #monthSettingsBody.closed {
-  max-height: 0;
+  height: 0;
   opacity: 0;
   pointer-events: none;
 }

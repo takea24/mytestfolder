@@ -1006,21 +1006,38 @@ async function applyWeekdayColor(color) {
     .setProperty("--calendar-weekday-color", color);
 }
 
-
 const toggleBtn = document.getElementById("toggleMonthSettings");
 const body = document.getElementById("monthSettingsBody");
 
 let isOpen = false;
 
+// 初期状態：閉じる
+body.classList.add("closed");
+body.style.height = "0px";
+toggleBtn.textContent = "開く";
+
 toggleBtn.onclick = () => {
   isOpen = !isOpen;
-  body.classList.toggle("closed", !isOpen);
-  toggleBtn.textContent = isOpen ? "閉じる" : "開く";
+
+  if (isOpen) {
+    body.classList.remove("closed");
+
+    // ★ iOS Safari 対策：実高さを入れる
+    const h = body.scrollHeight;
+    body.style.height = h + "px";
+
+    toggleBtn.textContent = "閉じる";
+  } else {
+    // ★ 高さを0に戻す
+    body.style.height = body.scrollHeight + "px"; // 一瞬入れて
+    requestAnimationFrame(() => {
+      body.style.height = "0px";
+      body.classList.add("closed");
+    });
+
+    toggleBtn.textContent = "開く";
+  }
 };
-
-// 初期状態：閉じる（おすすめ）
-body.classList.add("closed");
-
 
 // ===== 初期化 =====
 loadStamps();
