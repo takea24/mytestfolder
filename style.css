@@ -7,6 +7,7 @@ body {
 
 :root {
   --calendar-date-font: system-ui;
+  --calendar-date-color: #333333; /* ← 追加 */
 }
 
 
@@ -297,11 +298,13 @@ body.modal-open .floating-btn {
 /* 月タイトル */
 .content-layer h3 {
   font-family: var(--calendar-date-font);
+  color: var(--calendar-date-color);
 }
 
 /* 曜日 */
 .weekday {
   font-family: var(--calendar-date-font);
+  color: var(--calendar-date-color);
 }
 
 /* 日付数字 */
@@ -309,6 +312,7 @@ body.modal-open .floating-btn {
   font-family: var(--calendar-date-font);
   font-size: 1.1em;
   letter-spacing: 0.03em;
+  color: var(--calendar-date-color);
 }
 
 .floating-btn {

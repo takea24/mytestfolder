@@ -907,6 +907,8 @@ async function loadCalendarBoard(){
 
 
 const dateFontSelect = document.getElementById("dateFontSelect");
+const dateColorPicker = document.getElementById("dateColorPicker");
+
 
 const dateFontOptions = [
     { label: "AtkinHyp-Mono", value: "'Atkinson Hyperlegible Mono', normal" },
@@ -939,13 +941,27 @@ dateFontSelect.onchange = async () => {
   applyDateFont(font);
 };
 
+dateColorPicker.onchange = async () => {
+  const color = dateColorPicker.value;
+  await db.settings.put({ key: "dateColor", value: color });
+  applyDateColor(color);
+};
+
 (async () => {
-  const setting = await db.settings.get("dateFont");
-  if (setting) {
-    dateFontSelect.value = setting.value;
-    applyDateFont(setting.value);
+  const colorSetting = await db.settings.get("dateColor");
+  if (colorSetting) {
+    dateColorPicker.value = colorSetting.value;
+    applyDateColor(colorSetting.value);
+  } else {
+    applyDateColor("#333333"); // 既存ユーザー用デフォルト
   }
 })();
+
+
+async function applyDateColor(color) {
+  document.documentElement.style
+    .setProperty("--calendar-date-color", color);
+}
 
 
 // ===== 初期化 =====
