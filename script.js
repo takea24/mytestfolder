@@ -89,7 +89,7 @@ async function loadStamps() {
   const grid = document.getElementById("stampGrid");
   grid.innerHTML = "";
   const stamps = await db.stamps.toArray();
-  stamps.forEach(s => {
+    stamps.forEach(s => {
       const item = document.createElement("div");
       item.className = "stampItem";
 
@@ -97,23 +97,58 @@ async function loadStamps() {
       img.src = s.image instanceof Blob ? URL.createObjectURL(s.image) : s.image;
       img.classList.add("stamp-image");
       item.appendChild(img);
-      
-      const delBtn = document.createElement("button");
-      delBtn.textContent = "削除";
-      delBtn.onclick = async () => {
-      if (confirm(`「${s.name}」を削除しますか？`)) {
-        await db.stamps.delete(s.id);
-        const histories = await db.histories.filter(h => h.stampId === s.id).toArray();
-        for (const h of histories) await db.histories.delete(h.id);
-        loadStamps();
-        loadCalendarBoard();
-      }
-    };
-      item.appendChild(delBtn);
+
+      // ===== 長押し削除用 =====
+      let timer = null;
+      let longPressed = false;
+
+      const startLongPress = () => {
+        longPressed = false;
+        timer = setTimeout(async () => {
+          longPressed = true;
+
+          if (confirm(`「${s.name}」を削除しますか？`)) {
+            await db.stamps.delete(s.id);
+
+            const histories = await db.histories
+              .filter(h => h.stampId === s.id)
+              .toArray();
+
+            for (const h of histories) {
+              await db.histories.delete(h.id);
+            }
+
+            loadStamps();
+            loadCalendarBoard();
+          }
+        }, 700); // ← 升目とほぼ同じ
+      };
+
+      const cancelLongPress = () => {
+        clearTimeout(timer);
+      };
+
+      ["mousedown", "touchstart"].forEach(ev =>
+        item.addEventListener(ev, startLongPress)
+      );
+
+      ["mouseup", "mouseleave", "touchend", "touchcancel"].forEach(ev =>
+        item.addEventListener(ev, cancelLongPress)
+      );
+
+      // ===== 短押し（選択） =====
+      item.onclick = () => {
+        if (longPressed) {
+          longPressed = false;
+          return;
+        }
+
+        // ← ここは「スタンプ選択処理」があればそのまま
+        // （現状は何もしなくてOK）
+      };
 
       grid.appendChild(item);
-  });
-}
+    });}
 
 
 
