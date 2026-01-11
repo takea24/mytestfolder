@@ -7,7 +7,9 @@ body {
 
 :root {
   --calendar-date-font: system-ui;
-  --calendar-date-color: #333333; /* ← 追加 */
+  --calendar-date-color: #333333;   /* 日付数字 */
+  --calendar-weekday-color: #333333;/* 曜日 */
+  --calendar-month-color: #333333;  /* 月タイトル */
 }
 
 
@@ -298,13 +300,13 @@ body.modal-open .floating-btn {
 /* 月タイトル */
 .content-layer h3 {
   font-family: var(--calendar-date-font);
-  color: var(--calendar-date-color);
+  color: var(--calendar-month-color);
 }
 
 /* 曜日 */
 .weekday {
   font-family: var(--calendar-date-font);
-  color: var(--calendar-date-color);
+  color: var(--calendar-weekday-color);
 }
 
 /* 日付数字 */
@@ -359,4 +361,68 @@ section h3 {
   border-radius: 999px;        /* ふわっとした浮き感 */
   
   box-shadow: 0 2px 6px rgba(0,0,0,0.08); /* 浮いてる感じ */
+}
+
+.color-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.color-row label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+}
+
+.color-row label {
+  display: flex;
+  align-items: center;   /* ← 縦位置を揃える */
+  gap: 12px;             /* ← 文字と picker の間隔 */
+  font-size: 14px;
+}
+
+/* iOS Safari 対策（微調整） */
+.color-row input[type="color"] {
+  height: 28px;
+  padding: 0;
+}
+
+.color-label {
+  width: 3em;           /* ← ここで揃う */
+  display: inline-block;
+  text-align: right;    /* 右寄せで美しく */
+}
+
+/* 折りたたみボタン */
+.toggle-btn {
+  margin-left: auto;
+  font-size: 12px;
+  padding: 4px 8px;
+  border-radius: 999px;
+  border: 1px solid #ccc;
+  background: #fff;
+  cursor: pointer;
+}
+
+/* h2 を横並びに */
+section > h2 {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+/* 折りたたみ本体 */
+#monthSettingsBody {
+  overflow: hidden;
+  transition: max-height 0.3s ease, opacity 0.2s ease;
+}
+
+/* 閉じた状態 */
+#monthSettingsBody.closed {
+  max-height: 0;
+  opacity: 0;
+  pointer-events: none;
 }

@@ -908,6 +908,8 @@ async function loadCalendarBoard(){
 
 const dateFontSelect = document.getElementById("dateFontSelect");
 const dateColorPicker = document.getElementById("dateColorPicker");
+const monthColorPicker   = document.getElementById("monthColorPicker");
+const weekdayColorPicker = document.getElementById("weekdayColorPicker");
 
 
 const dateFontOptions = [
@@ -935,6 +937,9 @@ async function applyDateFont(font) {
     .setProperty("--calendar-date-font", font);
 }
 
+
+
+
 dateFontSelect.onchange = async () => {
   const font = dateFontSelect.value;
   await db.settings.put({ key: "dateFont", value: font });
@@ -947,21 +952,74 @@ dateColorPicker.onchange = async () => {
   applyDateColor(color);
 };
 
+monthColorPicker.onchange = async () => {
+  const color = monthColorPicker.value;
+  await db.settings.put({ key: "monthColor", value: color });
+  applyMonthColor(color);
+};
+
+weekdayColorPicker.onchange = async () => {
+  const color = weekdayColorPicker.value;
+  await db.settings.put({ key: "weekdayColor", value: color });
+  applyWeekdayColor(color);
+};
+
 (async () => {
-  const colorSetting = await db.settings.get("dateColor");
-  if (colorSetting) {
-    dateColorPicker.value = colorSetting.value;
-    applyDateColor(colorSetting.value);
+  const dateColor = await db.settings.get("dateColor");
+  if (dateColor) {
+    dateColorPicker.value = dateColor.value;
+    applyDateColor(dateColor.value);
   } else {
-    applyDateColor("#333333"); // 既存ユーザー用デフォルト
+    applyDateColor("#333333");
+  }
+
+  const monthColor = await db.settings.get("monthColor");
+  if (monthColor) {
+    monthColorPicker.value = monthColor.value;
+    applyMonthColor(monthColor.value);
+  } else {
+    applyMonthColor("#333333");
+  }
+
+  const weekdayColor = await db.settings.get("weekdayColor");
+  if (weekdayColor) {
+    weekdayColorPicker.value = weekdayColor.value;
+    applyWeekdayColor(weekdayColor.value);
+  } else {
+    applyWeekdayColor("#333333");
   }
 })();
+
 
 
 async function applyDateColor(color) {
   document.documentElement.style
     .setProperty("--calendar-date-color", color);
 }
+async function applyMonthColor(color) {
+  document.documentElement.style
+    .setProperty("--calendar-month-color", color);
+}
+
+async function applyWeekdayColor(color) {
+  document.documentElement.style
+    .setProperty("--calendar-weekday-color", color);
+}
+
+
+const toggleBtn = document.getElementById("toggleMonthSettings");
+const body = document.getElementById("monthSettingsBody");
+
+let isOpen = false;
+
+toggleBtn.onclick = () => {
+  isOpen = !isOpen;
+  body.classList.toggle("closed", !isOpen);
+  toggleBtn.textContent = isOpen ? "閉じる" : "開く";
+};
+
+// 初期状態：閉じる（おすすめ）
+body.classList.add("closed");
 
 
 // ===== 初期化 =====
