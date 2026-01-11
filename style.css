@@ -339,3 +339,22 @@ section > h2 {
   border-radius: 14px 14px 0 0;
 }
 
+/* ===== セクション内の小見出し（h3） ===== */
+section h3 {
+  font-size: 0.85rem;          /* 少し小さく */
+  font-weight: 600;
+  letter-spacing: 0.05em;
+
+  margin-top: 24px;
+  margin-bottom: 8px;
+
+  color: #666;
+  
+  display: inline-block;
+  padding: 4px 10px;
+  
+  background: #f5f5f5;
+  border-radius: 999px;        /* ふわっとした浮き感 */
+  
+  box-shadow: 0 2px 6px rgba(0,0,0,0.08); /* 浮いてる感じ */
+}
