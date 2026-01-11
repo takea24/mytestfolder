@@ -29,7 +29,6 @@ db.version(14).stores({
 });
 
 
-
 let scrollPos = 0;
 
 function openModal(modal) {
@@ -71,6 +70,7 @@ async function loadStamps() {
 
       const img = document.createElement("img");
       img.src = s.image instanceof Blob ? URL.createObjectURL(s.image) : s.image;
+      img.classList.add("stamp-image");
       item.appendChild(img);
       
       const delBtn = document.createElement("button");
@@ -104,7 +104,10 @@ document.getElementById("saveStamp").onclick = async () => {
   const nameInput = document.getElementById("stampName");
   if (!nameInput.value.trim()) nameInput.value = "name";
   const name = nameInput.value.trim();
-
+  
+  const cropModal = document.getElementById('cropModal');
+  cropModal.classList.remove('bg-mode');
+    
   openCropModal(file, async (croppedBlob, style) => {
     const shape =
       document.querySelector("input[name='clipShape']:checked")?.value
@@ -189,7 +192,11 @@ function openCropModal(
     description = "ピンチとドラッグでトリミング,点線はガイドライン"
   } = {}
 ) {
-  
+    
+    const cropModal = document.getElementById("cropModal");
+
+    // ★ 今回追加するのはこの1行（＋取得行）
+    cropModal.classList.toggle("bg-mode", mode === "background");
     
     const borderEnable = document.getElementById("borderEnabled");
     const borderColor  = document.getElementById("borderColor");
@@ -210,9 +217,6 @@ function openCropModal(
     if (borderEnable) borderEnable.onchange = () => { borderState.enabled = borderEnable.checked; requestDraw(); };
     if (borderColor)  borderColor.oninput = () => { borderState.color = borderColor.value; requestDraw(); };
     if (borderSize)   borderSize.oninput = () => { borderState.size = parseInt(borderSize.value, 10); requestDraw(); };
-    if (borderOptions) {
-        borderOptions.style.display = (mode === "background") ? "none" : "";
-      }
 
 
     
@@ -574,7 +578,8 @@ async function showStampPicker(cellId){
   stamps.forEach(s=>{
     const img = document.createElement("img");
       img.src = s.image instanceof Blob ? URL.createObjectURL(s.image) : s.image;
-
+      img.classList.add("stamp-image");
+      
     img.onclick = async (e)=>{
       e.stopPropagation(); // ★ 重要：背景クリックを止める
     
@@ -682,7 +687,9 @@ document.getElementById("bgUpload").onchange = e => {
 function openBgCropModal(file) {
   const year = parseInt(yearSelect.value);
   const month = parseInt(monthSelect.value);
-
+  const cropModal = document.getElementById('cropModal');
+  cropModal.classList.add('bg-mode');
+    
     openCropModal(
       file,
       async (blob) => {
@@ -840,6 +847,7 @@ async function loadCalendarBoardForMonth(year,month){
           
           const img = document.createElement("img");
           img.src = URL.createObjectURL(stamp.image);
+          img.classList.add("stamp-image");
           img.style.transform = `scale(${history.size ?? 1})`;
           
           wrapper.appendChild(img);
@@ -857,6 +865,7 @@ async function loadCalendarBoardForMonth(year,month){
       if(count===0) return;
       const div=document.createElement("div");
       const img=document.createElement("img"); img.src=URL.createObjectURL(s.image); div.appendChild(img);
+          img.classList.add("stamp-image");
       const label=document.createElement("span"); label.textContent=count; div.appendChild(label);
       monthStats.appendChild(div);
     });

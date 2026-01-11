@@ -32,27 +32,11 @@
 
 <h1>カレンダーボード型<br>スタンプアプリ ver1.2</h1>
 
-<button class="floating-btn" data-target="helpModal" style="position:fixed; top:10px; right:10px; z-index:2000;">はじめに見てね</button>
+<button class="floating-btn" data-target="helpModal">はじめに見てね</button>
 
 <!-- 説明モーダル -->
-<div id="helpModal" class="modal" style="
-  display:none;
-  position:fixed;
-  top:0; left:0;
-  width:100%; height:100%;
-  background:rgba(0,0,0,0.7);
-  align-items:center;
-  justify-content:center;
-  z-index:1000;
-">
-  <div style="
-    background:#fff;
-    padding:20px;
-    border-radius:8px;
-    max-width:90%;
-    max-height:80%;
-    overflow:auto;
-  ">
+<div id="helpModal" class="modal">
+  <div class="modal-content">
     <h2>アプリの説明</h2>
     <p>
       個人用でお試しに作成（利用は自己責任）<br>
@@ -64,34 +48,18 @@
       データはローカルなブラウザ(IndexedDB)内に保存されます。<br>
       （履歴やキャッシュ削除等で消えます※要注意です）<br>
       ・スクショでのバックアップをおすすめします<br>
-      ・スタンプのサイズは押す時に変更できますが<br>
-      　縁取りは登録時にしか変更できません。<br>
     </p>
     <button class="modal-close">閉じる</button>
   </div>
 </div>
 
-<button class="floating-btn" data-target="infoModal" style="position:fixed; top:40px; right:10px; z-index:2000;">更新履歴</button>
+<button class="floating-btn secondary" data-target="infoModal">
+更新履歴
+</button>
 
 <!-- 説明モーダル -->
-<div id="infoModal" class="modal" style="
-  display:none;
-  position:fixed;
-  top:0; left:0;
-  width:100%; height:100%;
-  background:rgba(0,0,0,0.7);
-  align-items:center;
-  justify-content:center;
-  z-index:1000;
-">
-  <div style="
-    background:#fff;
-    padding:20px;
-    border-radius:8px;
-    max-width:90%;
-    max-height:80%;
-    overflow:auto;
-  ">
+<div id="infoModal" class="modal">
+  <div class="modal-content">
       <h2> ver1.2更新履歴</h2>
       <p>
       DB更新により画像が一度表示されないかもしれません。リロードで直るはずです。<br>
@@ -114,46 +82,64 @@
   </div>
 </div>
 
-<h2>カレンダーボード</h2>
-<div id="focusGuard" tabindex="-1"></div>
-<div id="calendarBoard"></div>
-
-<h2>ボード追加・削除操作（まず月を選択）</h2>
-<label>年:
-<select id="yearSelect"></select>
-</label>
-<label>月:
-<select id="monthSelect"></select>
-</label>
-<button id="addSelectedMonth">月追加</button>
-<button id="deleteMonth">月削除</button>
-<br><br>
-
-<h2>背景画像設定</h2>
-
-<label>背景画像アップロード: <input type="file" id="bgUpload" accept="image/*"></label>
-<div class="bg-controls">
-  <label>明度<input type="range" id="bgBrightness" min="0.1" max="2" step="0.05" value="1"></label>
-  <label>透明度<input type="range" id="bgOpacity" min="0" max="1" step="0.01" value="1"></label>
-</div>
-
-<h2>表示設定</h2>
-<label>
-  日付フォント:
-  <select id="dateFontSelect">
-  </select>
-</label>
+<section id="calendarSection">
+  <h2>カレンダーボード</h2>
+  <div id="calendarBoard"></div>
+</section>
 
 
 
-<h2>スタンプ登録</h2>
-<label>画像を選択・トリミングして保存（ブラウザIndexedDBに保存）<label><br>
-<input id="stampName" placeholder="スタンプ名(オプション)">
-<input id="stampImage" type="file" accept="image/*">
-<button id="saveStamp">保存</button>
+<section id="stampSection">
+  <h2>スタンプ設定</h2>
 
-<h2>登録済みスタンプ</h2>
-<div id="stampGrid"></div>
+  <h3>スタンプ新規登録</h3>
+  <label>画像を選択・トリミングして保存<label><br>
+  <input id="stampName" placeholder="スタンプ名(オプション)">
+  <input id="stampImage" type="file" accept="image/*">
+  <button id="saveStamp">保存</button>
+
+  <h3>登録済みスタンプ一覧</h3>
+  <div id="stampGrid"></div>
+</section>
+
+
+
+<section id="monthControlSection">
+  <h2>フォント・背景の設定・ボード追加/削除</h2>
+
+  <h3>フォント設定</h3>
+  <label>
+    日付フォント:
+    <select id="dateFontSelect"></select>
+  </label>
+
+  <h3>背景画像設定</h3>
+  <label>背景画像アップロード:
+    <input type="file" id="bgUpload" accept="image/*">
+  </label>
+
+  <div class="bg-controls">
+    <label>明度
+      <input type="range" id="bgBrightness" min="0.1" max="2" step="0.05" value="1">
+    </label>
+    <label>透明度
+      <input type="range" id="bgOpacity" min="0" max="1" step="0.01" value="1">
+    </label>
+  </div>
+
+  <h3>ボード追加・削除</h3>
+  <label>年:
+    <select id="yearSelect"></select>
+  </label>
+  <label>月:
+    <select id="monthSelect"></select>
+  </label>
+  <button id="addSelectedMonth">月追加</button>
+  <button id="deleteMonth">月削除</button>
+  
+</section>
+
+
 
 
 <!-- スタンプトリミングモーダル -->
@@ -245,7 +231,7 @@
   <div class="modal-content stamp-picker-content">
 
     <div id="stampSizeContainer">
-      <label for="stampSizeSlider">スタンプサイズ</label>
+      <label for="stampSizeSlider">スタンプサイズ(先に選択)</label>
       <!-- スライダーを JS でここに追加 -->
     </div>
 
