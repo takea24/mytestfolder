@@ -1,30 +1,86 @@
 // ===== Dexie DB =====
 const db = new Dexie("StampAppDB");
-db.version(13).stores({
-  stamps: "id,name,image",
-  histories: "id,stampId,date",
+db.version(14).stores({
+  stamps: "id,name,image,shape",
+  histories: "id,stampId,date,size",
   months: "id,year,month,bgImage,bgBrightness,bgOpacity",
   settings: "key"
+}).upgrade(async tx => {
+    tx.table("histories").toCollection().modify(h => {
+       if (!h.size) h.size = 1;
+    });
+  const stamps = await tx.table("stamps").toArray();
+
+  for (const stamp of stamps) {
+    if (!stamp.shape) {
+      stamp.shape = "square";
+    }
+    if (!stamp.style) {
+      stamp.style = { border: { enabled: false, color: "#ff4d6d", size: 4 } };
+    }
+
+    if (typeof stamp.image === "string") {
+      const res = await fetch(stamp.image);
+      const blob = await res.blob();
+      stamp.image = blob;
+    }
+    await tx.table("stamps").put(stamp);
+  }
 });
+
 
 let scrollPos = 0;
 
 function openModal(modal) {
-    scrollPos = window.scrollY || window.pageYOffset;
-    modal.style.display = "flex";
+  scrollPos = window.scrollY || window.pageYOffset;
+  setHelpButtonsVisible(false);
+  // スクロール位置を保持したまま body を固定
+  document.body.classList.add("modal-open");
+  document.body.style.top = `-${scrollPos}px`;
+
+  modal.style.display = "flex";
 }
 
 function closeModal(modal) {
   modal.style.display = "none";
+  setHelpButtonsVisible(true);
+  // body を解放
+  document.body.classList.remove("modal-open");
+  document.body.style.top = "";
 
-  // スクロール復元
+  // ★ 開いた瞬間の位置に正確に戻す
   window.scrollTo(0, scrollPos);
 
-  // ★ フォーカスを input から強制的に外す
+  // iOS対策（フォーカス逃がし）
   setTimeout(() => {
-    document.getElementById("focusGuard").focus();
+    document.getElementById("focusGuard")?.focus();
   }, 0);
 }
+
+// ===== modal表示中：画面ピンチ制御 =====
+document.addEventListener("gesturestart", e => {
+  if (!document.body.classList.contains("modal-open")) return;
+
+  // canvas 内は完全許可
+  if (e.target.closest("#cropCanvas")) return;
+
+  // 拡大だけ禁止
+  if (e.scale > 1) {
+    e.preventDefault();
+  }
+});
+
+document.addEventListener("gesturechange", e => {
+  if (!document.body.classList.contains("modal-open")) return;
+
+  // canvas 内は完全許可
+  if (e.target.closest("#cropCanvas")) return;
+
+  // 拡大だけ禁止、縮小は許可
+  if (e.scale > 1) {
+    e.preventDefault();
+  }
+});
 
 
 
@@ -33,29 +89,66 @@ async function loadStamps() {
   const grid = document.getElementById("stampGrid");
   grid.innerHTML = "";
   const stamps = await db.stamps.toArray();
-  stamps.forEach(s => {
-    const div = document.createElement("div");
-    div.className = "stampItem";
+    stamps.forEach(s => {
+      const item = document.createElement("div");
+      item.className = "stampItem";
 
-    const img = document.createElement("img");
-    img.src = URL.createObjectURL(s.image);
-    div.appendChild(img);
+      const img = document.createElement("img");
+      img.src = s.image instanceof Blob ? URL.createObjectURL(s.image) : s.image;
+      img.classList.add("stamp-image");
+      item.appendChild(img);
 
-    const delBtn = document.createElement("button");
-    delBtn.textContent = "削除";
-    delBtn.onclick = async () => {
-      if (confirm(`「${s.name}」を削除しますか？`)) {
-        await db.stamps.delete(s.id);
-        const histories = await db.histories.filter(h => h.stampId === s.id).toArray();
-        for (const h of histories) await db.histories.delete(h.id);
-        loadStamps();
-        loadCalendarBoard();
-      }
-    };
-    div.appendChild(delBtn);
-    grid.appendChild(div);
-  });
-}
+      // ===== 長押し削除用 =====
+      let timer = null;
+      let longPressed = false;
+
+      const startLongPress = () => {
+        longPressed = false;
+        timer = setTimeout(async () => {
+          longPressed = true;
+
+          if (confirm(`「${s.name}」を削除しますか？`)) {
+            await db.stamps.delete(s.id);
+
+            const histories = await db.histories
+              .filter(h => h.stampId === s.id)
+              .toArray();
+
+            for (const h of histories) {
+              await db.histories.delete(h.id);
+            }
+
+            loadStamps();
+            loadCalendarBoard();
+          }
+        }, 700); // ← 升目とほぼ同じ
+      };
+
+      const cancelLongPress = () => {
+        clearTimeout(timer);
+      };
+
+      ["mousedown", "touchstart"].forEach(ev =>
+        item.addEventListener(ev, startLongPress)
+      );
+
+      ["mouseup", "mouseleave", "touchend", "touchcancel"].forEach(ev =>
+        item.addEventListener(ev, cancelLongPress)
+      );
+
+      // ===== 短押し（選択） =====
+      item.onclick = () => {
+        if (longPressed) {
+          longPressed = false;
+          return;
+        }
+
+        // ← ここは「スタンプ選択処理」があればそのまま
+        // （現状は何もしなくてOK）
+      };
+
+      grid.appendChild(item);
+    });}
 
 
 
@@ -69,24 +162,35 @@ document.getElementById("saveStamp").onclick = async () => {
   }
 
   const nameInput = document.getElementById("stampName");
-
-  // 名前が空ならデフォルト名を代入
-  if (!nameInput.value.trim()) {
-    nameInput.value = "name"; // ここでデフォルト名を入力欄にセット
-  }
-
+  if (!nameInput.value.trim()) nameInput.value = "name";
   const name = nameInput.value.trim();
+  
+  const cropModal = document.getElementById('cropModal');
+  cropModal.classList.remove('bg-mode');
+    
+  openCropModal(file, async (croppedBlob, style) => {
+    const shape =
+      document.querySelector("input[name='clipShape']:checked")?.value
+      || "square";
 
-  openCropModal(file, async (croppedBlob) => {
-    await db.stamps.add({ id: crypto.randomUUID(), name, image: croppedBlob });
-
-    // フォームをリセット
-    nameInput.value = "";
-    document.getElementById("stampImage").value = "";
+    await db.stamps.add({
+      id: crypto.randomUUID(),
+      name,
+      image: croppedBlob,
+      shape,
+      style
+    });
 
     loadStamps();
     loadCalendarMonths();
   });
+
+  nameInput.value = "";
+  document.getElementById("stampImage").value = "";
+
+    // フォームをリセット
+    nameInput.value = "";
+    document.getElementById("stampImage").value = "";
 };
 
 const helpButtons = document.querySelectorAll(".floating-btn");
@@ -97,10 +201,17 @@ helpButtons.forEach(btn => {
     const modalId = btn.dataset.target;
     const modal = document.getElementById(modalId);
     if (modal) {
-      modal.style.display = "flex";
+      openModal(modal);
     }
   };
 });
+
+function setHelpButtonsVisible(visible) {
+  document.querySelectorAll(".floating-btn").forEach(btn => {
+    btn.style.opacity = visible ? "1" : "0";
+    btn.style.pointerEvents = visible ? "auto" : "none";
+  });
+}
 
 // スクロールでまとめて消す
 window.addEventListener("scroll", () => {
@@ -115,7 +226,9 @@ window.addEventListener("scroll", () => {
 document.querySelectorAll(".modal-close").forEach(btn => {
   btn.onclick = () => {
     const modal = btn.closest(".modal");
-    if (modal) modal.style.display = "none";
+      if (modal) {
+          closeModal(modal)
+      };
   };
 });
 
@@ -123,7 +236,7 @@ document.querySelectorAll(".modal-close").forEach(btn => {
 document.querySelectorAll(".modal").forEach(modal => {
   modal.addEventListener("click", e => {
     if (e.target === modal) {
-      modal.style.display = "none";
+        closeModal(modal);
     }
   });
 });
@@ -136,10 +249,37 @@ function openCropModal(
   callback,
   {
     mode = "stamp",      // "stamp" | "background"
-    description = "ピンチとドラッグでトリミング"
+    description = "ピンチとドラッグでトリミング,点線はガイドライン"
   } = {}
 ) {
-  
+    
+    const cropModal = document.getElementById("cropModal");
+
+    // ★ 今回追加するのはこの1行（＋取得行）
+    cropModal.classList.toggle("bg-mode", mode === "background");
+    
+    const borderEnable = document.getElementById("borderEnabled");
+    const borderColor  = document.getElementById("borderColor");
+    const borderSize   = document.getElementById("borderWidth");
+    const borderOptions = document.getElementById("borderOptions");
+    // null 安全化
+    if (borderEnable) borderEnable.checked = false;
+    if (borderColor)  borderColor.value = "#ff4d6d";
+    if (borderSize)   borderSize.value = 4;
+    // 初期状態オブジェクト
+    const borderState = {
+      enabled: borderEnable?.checked ?? false,
+      color: borderColor?.value ?? "#ff4d6d",
+      size: parseInt(borderSize?.value ?? "4", 10)
+    };
+
+    // イベント設定（null 安全）
+    if (borderEnable) borderEnable.onchange = () => { borderState.enabled = borderEnable.checked; requestDraw(); };
+    if (borderColor)  borderColor.oninput = () => { borderState.color = borderColor.value; requestDraw(); };
+    if (borderSize)   borderSize.oninput = () => { borderState.size = parseInt(borderSize.value, 10); requestDraw(); };
+
+
+    
   const modal = document.getElementById("cropModal");
   const canvas = document.getElementById("cropCanvas");
   const ctx = canvas.getContext("2d");
@@ -155,9 +295,34 @@ function openCropModal(
   const img = new Image();
 
   img.onload = () => {
-      
+      console.log("画像ロード完了", img.width, img.height); // <- ここ追加
       let needsRedraw = false;
+      
+      const borderState = {
+        enabled: borderEnable.checked,
+        color: borderColor.value,
+        size: parseInt(borderSize.value, 10)
+      };
+      
+      borderEnable.onchange = null;
+      borderColor.oninput = null;
+      borderSize.oninput = null;
 
+      borderEnable.onchange = () => {
+        borderState.enabled = borderEnable.checked;
+        requestDraw();
+      };
+
+      borderColor.oninput = () => {
+        borderState.color = borderColor.value;
+        requestDraw();
+      };
+
+      borderSize.oninput = () => {
+        borderState.size = parseInt(borderSize.value, 10);
+        requestDraw();
+      };
+      
       function requestDraw() {
         if (!needsRedraw) {
           needsRedraw = true;
@@ -196,17 +361,38 @@ function openCropModal(
 
       const draw = () => {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
-        ctx.drawImage(img, posX, posY, img.width * scale, img.height * scale);
+
+        // 画像
+        ctx.drawImage(
+          img,
+          posX, posY,
+          img.width * scale,
+          img.height * scale
+        );
 
         if (mode === "stamp") {
+
+          // ===== 縁 =====
+          if (borderState.enabled && borderState.size > 0) {
+            ctx.save();
+            ctx.strokeStyle = borderState.color;
+            ctx.lineWidth = borderState.size;
+            drawGuidePath(ctx, getSelectedShape(), canvas.width);
+            ctx.stroke();
+            ctx.restore();
+          }
+
+          // ===== ガイド（常に最後）=====
           ctx.save();
-          ctx.strokeStyle = "black";
+          ctx.setLineDash([6, 4]);
+          ctx.strokeStyle = "rgba(0,0,0,0.6)";
           ctx.lineWidth = 2;
           drawGuidePath(ctx, getSelectedShape(), canvas.width);
           ctx.stroke();
           ctx.restore();
         }
       };
+
 
 
     draw();
@@ -259,33 +445,65 @@ function openCropModal(
         const outCanvas = document.createElement("canvas");
         outCanvas.width  = canvas.width;
         outCanvas.height = canvas.height;
+
         const outCtx = outCanvas.getContext("2d");
 
         if (mode === "stamp") {
           outCtx.save();
+
+          // ===== クリッピング =====
           applyClip(outCtx, getSelectedShape(), outCanvas.width);
+
+          // ===== 画像描画 =====
           outCtx.drawImage(canvas, 0, 0);
+
+          // ===== 縁描画 =====
+          if (borderState.enabled && borderState.size > 0) {
+            outCtx.strokeStyle = borderState.color;
+            outCtx.lineWidth   = borderState.size;
+            outCtx.stroke();
+          }
+
           outCtx.restore();
 
-          outCanvas.toBlob(blob => {
-            modal.style.display = "none";
-            callback(blob);
-          }, "image/png");
+          // ===== Blob 化して呼び出し元へ返す =====
+          outCanvas.toBlob(
+            blob => {
+                closeModal(modal);
+
+              callback(blob, {
+                border: {
+                  enabled: borderState.enabled,
+                  color: borderState.color,
+                  size:  borderState.size
+                }
+              });
+            },
+            "image/png"
+          );
+
         } else {
-          // background
+          // ===== background モード =====
           outCtx.drawImage(canvas, 0, 0);
-          outCanvas.toBlob(blob => {
-            modal.style.display = "none";
-            callback(blob);
-          }, "image/jpeg", 0.9);
+
+          outCanvas.toBlob(
+            blob => {
+                closeModal(modal);
+              callback(blob);
+            },
+            "image/jpeg",
+            0.9
+          );
         }
       };
-
   };
 
   img.src = URL.createObjectURL(file);
-  modal.style.display = "flex";
+    openModal(modal);
 }
+
+
+
 
 function drawGuidePath(ctx, shape, size) {
   ctx.beginPath();
@@ -306,6 +524,38 @@ function drawGuidePath(ctx, shape, size) {
     case "heart":
       drawHeartPath(ctx, size);
       break;
+    
+    case "coffin": {
+        const w = size;
+        const h = size;
+
+        // ===== 上側
+        const topY   = h * 0.10;   // 上の平ら部分のY
+        const topW   = w * 0.30;   // 上の短辺の幅
+
+        // ===== 下側
+        const bottomY = h * 0.92;  // 下の平ら部分のY
+        const bottomW = w * 0.25;  // 下の短辺の幅
+
+        // ===== 中央最大幅
+        const midW = w * 0.60;
+
+        ctx.moveTo(w / 2 - topW / 2, topY);      // ① 上左
+        ctx.lineTo(w / 2 + topW / 2, topY);      // ② 上右
+
+        ctx.lineTo(w / 2 + midW / 2, h * 0.35);     // ③ 右中央
+
+        ctx.lineTo(w / 2 + bottomW / 2, bottomY);// ④ 下右
+        ctx.lineTo(w / 2 - bottomW / 2, bottomY);// ⑤ 下左
+
+        ctx.lineTo(w / 2 - midW / 2, h * 0.35);     // ⑥ 左中央
+
+        ctx.closePath();
+        break;
+      }
+
+
+
 
     default:
       ctx.rect(0, 0, size, size);
@@ -313,6 +563,8 @@ function drawGuidePath(ctx, shape, size) {
 
   ctx.closePath();
 }
+
+
 
 function applyClip(ctx, shape, size) {
   drawGuidePath(ctx, shape, size);
@@ -351,8 +603,6 @@ function drawHeartPath(ctx, size) {
 
 
 
-
-
 (function(){
   const modal = document.getElementById("cropModal");
   let lastTap = 0;
@@ -387,15 +637,21 @@ async function showStampPicker(cellId){
   const stamps = await db.stamps.toArray();
   stamps.forEach(s=>{
     const img = document.createElement("img");
-    img.src = URL.createObjectURL(s.image);
-
+      img.src = s.image instanceof Blob ? URL.createObjectURL(s.image) : s.image;
+      img.classList.add("stamp-image");
+      
     img.onclick = async (e)=>{
       e.stopPropagation(); // ★ 重要：背景クリックを止める
+    
+      const sizeSlider = document.getElementById("stampSizeSlider");
+      const size = sizeSlider ? parseFloat(sizeSlider.value) : 1;
 
+        
       await db.histories.put({
         id: currentCellId,
         stampId: s.id,
-        date: new Date()
+        date: new Date(),
+        size: size
       });
 
       closeModal(picker);  // ★ ここだけ
@@ -406,6 +662,21 @@ async function showStampPicker(cellId){
 
     grid.appendChild(img);
   });
+
+    // 追加: サイズスライダーを表示
+    const sliderContainer = document.getElementById("stampSizeContainer");
+    let slider = document.getElementById("stampSizeSlider");
+    if (!slider) {
+      slider = document.createElement("input");
+      slider.type = "range";
+      slider.min = 0.5;
+      slider.max = 2;
+      slider.step = 0.05;
+      slider.value = 1;
+      slider.id = "stampSizeSlider";
+      slider.style.width = "100%";
+      sliderContainer.appendChild(slider);
+    }
 
   openModal(picker);
 }
@@ -476,7 +747,9 @@ document.getElementById("bgUpload").onchange = e => {
 function openBgCropModal(file) {
   const year = parseInt(yearSelect.value);
   const month = parseInt(monthSelect.value);
-
+  const cropModal = document.getElementById('cropModal');
+  cropModal.classList.add('bg-mode');
+    
     openCropModal(
       file,
       async (blob) => {
@@ -622,7 +895,23 @@ async function loadCalendarBoardForMonth(year,month){
     if(history){
       const stamp=await db.stamps.get(history.stampId);
       if(stamp){
-        const img=document.createElement("img"); img.src=URL.createObjectURL(stamp.image); container.appendChild(img);
+          const wrapper = document.createElement("div");
+          wrapper.className = "stampItem";
+          wrapper.classList.add(`shape-${stamp.shape}`);
+
+          if (stamp.style?.border?.enabled) {
+            wrapper.style.setProperty("--border-enabled", 1);
+            wrapper.style.setProperty("--border-color", stamp.style.border.color);
+            wrapper.style.setProperty("--border-size", stamp.style.border.size + "px");
+          }
+          
+          const img = document.createElement("img");
+          img.src = URL.createObjectURL(stamp.image);
+          img.classList.add("stamp-image");
+          img.style.transform = `scale(${history.size ?? 1})`;
+          
+          wrapper.appendChild(img);
+          container.appendChild(wrapper);
       }
     }
   }
@@ -636,6 +925,7 @@ async function loadCalendarBoardForMonth(year,month){
       if(count===0) return;
       const div=document.createElement("div");
       const img=document.createElement("img"); img.src=URL.createObjectURL(s.image); div.appendChild(img);
+          img.classList.add("stamp-image");
       const label=document.createElement("span"); label.textContent=count; div.appendChild(label);
       monthStats.appendChild(div);
     });
@@ -652,8 +942,14 @@ async function loadCalendarBoard(){
 
 
 const dateFontSelect = document.getElementById("dateFontSelect");
+const dateColorPicker = document.getElementById("dateColorPicker");
+const monthColorPicker   = document.getElementById("monthColorPicker");
+const weekdayColorPicker = document.getElementById("weekdayColorPicker");
+
 
 const dateFontOptions = [
+    { label: "AtkinHyp-Mono", value: "'Atkinson Hyperlegible Mono', normal" },
+    { label: "Gothic", value: "'Zen Kaku Gothic New', normal" },
     { label: "Ballet", value: "'Ballet', cursive" },
     { label: "Playfair Display", value: "'Playfair Display', serif" },
     { label: "Dancing Script", value: "'Dancing Script', cursive" },
@@ -676,20 +972,107 @@ async function applyDateFont(font) {
     .setProperty("--calendar-date-font", font);
 }
 
+
+
+
 dateFontSelect.onchange = async () => {
   const font = dateFontSelect.value;
   await db.settings.put({ key: "dateFont", value: font });
   applyDateFont(font);
 };
 
+dateColorPicker.onchange = async () => {
+  const color = dateColorPicker.value;
+  await db.settings.put({ key: "dateColor", value: color });
+  applyDateColor(color);
+};
+
+monthColorPicker.onchange = async () => {
+  const color = monthColorPicker.value;
+  await db.settings.put({ key: "monthColor", value: color });
+  applyMonthColor(color);
+};
+
+weekdayColorPicker.onchange = async () => {
+  const color = weekdayColorPicker.value;
+  await db.settings.put({ key: "weekdayColor", value: color });
+  applyWeekdayColor(color);
+};
+
 (async () => {
-  const setting = await db.settings.get("dateFont");
-  if (setting) {
-    dateFontSelect.value = setting.value;
-    applyDateFont(setting.value);
+  const dateColor = await db.settings.get("dateColor");
+  if (dateColor) {
+    dateColorPicker.value = dateColor.value;
+    applyDateColor(dateColor.value);
+  } else {
+    applyDateColor("#333333");
+  }
+
+  const monthColor = await db.settings.get("monthColor");
+  if (monthColor) {
+    monthColorPicker.value = monthColor.value;
+    applyMonthColor(monthColor.value);
+  } else {
+    applyMonthColor("#333333");
+  }
+
+  const weekdayColor = await db.settings.get("weekdayColor");
+  if (weekdayColor) {
+    weekdayColorPicker.value = weekdayColor.value;
+    applyWeekdayColor(weekdayColor.value);
+  } else {
+    applyWeekdayColor("#333333");
   }
 })();
 
+
+
+async function applyDateColor(color) {
+  document.documentElement.style
+    .setProperty("--calendar-date-color", color);
+}
+async function applyMonthColor(color) {
+  document.documentElement.style
+    .setProperty("--calendar-month-color", color);
+}
+
+async function applyWeekdayColor(color) {
+  document.documentElement.style
+    .setProperty("--calendar-weekday-color", color);
+}
+
+const toggleBtn = document.getElementById("toggleMonthSettings");
+const body = document.getElementById("monthSettingsBody");
+
+let isOpen = false;
+
+// 初期状態：閉じる
+body.classList.add("closed");
+body.style.height = "0px";
+toggleBtn.textContent = "開く";
+
+toggleBtn.onclick = () => {
+  isOpen = !isOpen;
+
+  if (isOpen) {
+    body.classList.remove("closed");
+
+    // ★ iOS Safari 対策：実高さを入れる
+    const h = body.scrollHeight;
+    body.style.height = h + "px";
+
+    toggleBtn.textContent = "閉じる";
+  } else {
+    // ★ 高さを0に戻す
+    body.style.height = body.scrollHeight + "px"; // 一瞬入れて
+    requestAnimationFrame(() => {
+      body.style.height = "0px";
+      body.classList.add("closed");
+    });
+
+    toggleBtn.textContent = "開く";
+  }
+};
 
 // ===== 初期化 =====
 loadStamps();
