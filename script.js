@@ -57,6 +57,31 @@ function closeModal(modal) {
   }, 0);
 }
 
+// ===== modal表示中：画面ピンチ制御 =====
+document.addEventListener("gesturestart", e => {
+  if (!document.body.classList.contains("modal-open")) return;
+
+  // canvas 内は完全許可
+  if (e.target.closest("#cropCanvas")) return;
+
+  // 拡大だけ禁止
+  if (e.scale > 1) {
+    e.preventDefault();
+  }
+});
+
+document.addEventListener("gesturechange", e => {
+  if (!document.body.classList.contains("modal-open")) return;
+
+  // canvas 内は完全許可
+  if (e.target.closest("#cropCanvas")) return;
+
+  // 拡大だけ禁止、縮小は許可
+  if (e.scale > 1) {
+    e.preventDefault();
+  }
+});
+
 
 
 // ===== 登録スタンプ表示 =====
