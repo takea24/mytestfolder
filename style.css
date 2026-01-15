@@ -553,11 +553,7 @@ body.exporting .month-container {
   }
 }
 
-/* ===== 縁OFF時：色・太さを無効化 ===== */
-#borderOptions.border-disabled {
+#borderOptions.border-disabled .border-controls {
   opacity: 0.4;
-}
-
-#borderOptions.border-disabled input {
   pointer-events: none;
 }

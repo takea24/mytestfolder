@@ -322,25 +322,43 @@ function openCropModal(
       }
     }
 
-    
-    // null 安全化
+    // ===== 初期状態 =====
     if (borderEnable) borderEnable.checked = false;
     if (borderColor)  borderColor.value = "#ff4d6d";
     if (borderSize)   borderSize.value = 4;
-    // 初期状態オブジェクト
+
     const borderState = {
       enabled: borderEnable?.checked ?? false,
       color: borderColor?.value ?? "#ff4d6d",
       size: parseInt(borderSize?.value ?? "4", 10)
     };
 
-    // 初期UI反映
+    // ★ 初期UI反映（これ重要）
     updateBorderUI();
 
-    // イベント設定（null 安全）
-    if (borderEnable) borderEnable.onchange = () => { borderState.enabled = borderEnable.checked; requestDraw(); };
-    if (borderColor)  borderColor.oninput = () => { borderState.color = borderColor.value; requestDraw(); };
-    if (borderSize)   borderSize.oninput = () => { borderState.size = parseInt(borderSize.value, 10); requestDraw(); };
+    function attachBorderUIHandlers(requestDraw) {
+      if (borderEnable) {
+        borderEnable.onchange = () => {
+          borderState.enabled = borderEnable.checked;
+          updateBorderUI();
+          requestDraw();
+        };
+      }
+
+      if (borderColor) {
+        borderColor.oninput = () => {
+          borderState.color = borderColor.value;
+          requestDraw();
+        };
+      }
+
+      if (borderSize) {
+        borderSize.oninput = () => {
+          borderState.size = parseInt(borderSize.value, 10);
+          requestDraw();
+        };
+      }
+    }
 
 
     
@@ -362,21 +380,6 @@ function openCropModal(
       console.log("画像ロード完了", img.width, img.height); // <- ここ追加
       let needsRedraw = false;
       
-     
-      borderEnable.onchange = () => {
-        borderState.enabled = borderEnable.checked;
-        requestDraw();
-      };
-
-      borderColor.oninput = () => {
-        borderState.color = borderColor.value;
-        requestDraw();
-      };
-
-      borderSize.oninput = () => {
-        borderState.size = parseInt(borderSize.value, 10);
-        requestDraw();
-      };
       
       function requestDraw() {
         if (!needsRedraw) {
@@ -387,6 +390,10 @@ function openCropModal(
           });
         }
       }
+
+      // ★ ここで初めてイベントを結線
+      attachBorderUIHandlers(requestDraw);
+
 
       const maxW = Math.min(window.innerWidth * 0.9, 900);
       const maxH = Math.min(window.innerHeight * 0.7, 600);
