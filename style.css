@@ -6,10 +6,11 @@ body {
 }
 
 :root {
-  --calendar-date-font: system-ui;
-  --calendar-date-color: #333333;   /* 日付数字 */
-  --calendar-weekday-color: #333333;/* 曜日 */
-  --calendar-month-color: #333333;  /* 月タイトル */
+    --calendar-date-font: system-ui;
+    --calendar-date-color: #333333;   /* 日付数字 */
+    --calendar-weekday-color: #333333;/* 曜日 */
+    --calendar-month-color: #333333;  /* 月タイトル */
+    --calendar-font-scale: 1;
 }
 
 
@@ -146,7 +147,7 @@ h2 { margin-top: 30px; }
   left: 2px;
   background: rgba(255,255,255,0.5);
   padding: 1px 3px;
-  font-size: 10px;
+  font-size: calc(10px * var(--calendar-font-scale));
   font-weight: bold;
   z-index: 2;
   border-radius: 2px;
@@ -193,6 +194,11 @@ h2 { margin-top: 30px; }
   padding: 10px;
 }
 
+.month-note {
+  margin-left: 8px;   /* 左に余白 */
+  margin-bottom: 6px;    /* 下 */
+}
+
 /* 月ごとのスタンプ使用回数 */
 .month-stats {
   display: flex;
@@ -201,7 +207,8 @@ h2 { margin-top: 30px; }
   margin-top: 10px; /* ボード下部との余白 */
   position: relative; /* 背景より前面に表示 */
   z-index: 2;
-
+  font-family: var(--calendar-date-font);
+  color: var(--calendar-date-color);
 }
 .month-stats div {
   text-align: center;
@@ -214,8 +221,12 @@ h2 { margin-top: 30px; }
   border-radius: 6px;
 }
 .month-stats span {
-  display: block;
-  font-size: 12px;
+  display: inline-block;
+  background: rgba(255,255,255,0.35); /* 日付より薄く */
+  border-radius: 4px;
+  padding: 2px 4px;
+  font-size: calc(10px * var(--calendar-font-scale));
+  color: var(--calendar-date-color);
   text-align: center;
 }
 
@@ -250,9 +261,6 @@ body.modal-open .floating-btn {
   display: none;
 }
 
-#cropCanvas {
-  touch-action: none; /* JSでピンチ制御しているのでOK */
-}
 
 #cropModal {
   display: none;
@@ -264,7 +272,11 @@ body.modal-open .floating-btn {
   z-index: 1000;
 }
 
+/* ===== cropModal 中身レイアウト ===== */
 #cropModal > div {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
   max-width: 95vw;
   max-height: 90vh;
   overflow: hidden;
@@ -274,6 +286,8 @@ body.modal-open .floating-btn {
 #cropModal.bg-mode #borderOptions {
   display: none;
 }
+
+
 
 
 .modal {
@@ -300,19 +314,25 @@ body.modal-open .floating-btn {
 /* 月タイトル */
 .content-layer h3 {
   font-family: var(--calendar-date-font);
+  font-size: calc(14px * var(--calendar-font-scale));
   color: var(--calendar-month-color);
+  line-height: 1.2em;
 }
 
 /* 曜日 */
 .weekday {
   font-family: var(--calendar-date-font);
+  font-size: calc(12px * var(--calendar-font-scale));
   color: var(--calendar-weekday-color);
+  line-height: 1.2em;
+  height: 1.2em;
+  align-items: center;
 }
 
 /* 日付数字 */
 .date-label {
   font-family: var(--calendar-date-font);
-  font-size: 1.1em;
+  font-size: calc(10px * var(--calendar-font-scale));
   letter-spacing: 0.03em;
   color: var(--calendar-date-color);
 }
@@ -424,4 +444,97 @@ section > h2 {
   height: 0;
   opacity: 0;
   pointer-events: none;
+}
+
+
+/* PNG書き出し中だけ背景下地を消す */
+body.exporting section,
+body.exporting #calendarBoard,
+body.exporting .month-container,
+body.exporting .content-layer {
+  background: transparent !important;
+}
+body.exporting .month-container,
+body.exporting .content-layer {
+  box-shadow: none !important;
+}
+body.exporting .month-container {
+  overflow: visible !important;
+}
+
+/* ===== 選択UI全体 ===== */
+#borderOptions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 12px;
+  justify-content: center;
+
+  padding: 10px;
+  background: #f7f7f7;
+  border-radius: 12px;
+}
+/* ===== 形状ピッカー ===== */
+.shape-picker {
+  display: flex;
+  gap: 6px;
+}
+
+.shape-picker label {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+
+  background: #fff;
+  border: 1px solid #ccc;
+  font-size: 18px;
+  cursor: pointer;
+}
+
+/* チェックされた形を強調 */
+.shape-picker input {
+  display: none;
+}
+
+.shape-picker input:checked + * {
+  background: #e0e0e0;
+  border-color: #999;
+}
+
+/* ===== 縁オプション ===== */
+#borderOptions > label {
+  display: flex;
+  flex-direction: column;
+  font-size: 12px;
+  gap: 4px;
+  align-items: center;
+}
+
+#borderOptions input[type="color"] {
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border: none;
+}
+
+#borderOptions input[type="range"] {
+  width: 100px;
+}
+
+#cropCanvas {
+  touch-action: none; /* JSでピンチ制御しているのでOK */
+  margin-top: 6px;
+  max-width: 100%;
+  max-height: 60vh;
+  border-radius: 12px;
+}
+
+#cropSaveBtn {
+  margin-top: 8px;
+  width: 100%;
+  font-size: 16px;
+  padding: 10px 0;
 }

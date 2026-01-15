@@ -27,6 +27,53 @@ db.version(14).stores({
     await tx.table("stamps").put(stamp);
   }
 });
+// ===== カレンダー文字サイズ設定（全部連動） =====
+const fontScaleSlider = document.getElementById("calendarFontScale");
+
+// デフォルト倍率
+const DEFAULT_FONT_SCALE = 1;
+
+// 月データ取得＆反映
+async function applyFontScaleForMonth(year, month) {
+  const monthId = `month-${year}-${month}`;
+  const monthData = await db.months.get(monthId);
+
+  const scale =
+    monthData?.fontScale ??
+    (await db.settings.get("defaultFontScale"))?.value ??
+    DEFAULT_FONT_SCALE;
+
+  // UI反映
+  fontScaleSlider.value = scale;
+
+  document.documentElement.style.setProperty(
+    "--calendar-font-scale",
+    scale
+  );
+}
+
+// スライダー操作中：即時反映（DBは触らない）
+fontScaleSlider.oninput = () => {
+  document.documentElement.style.setProperty(
+    "--calendar-font-scale",
+    Number(fontScaleSlider.value)
+  );
+};
+
+// 操作確定時：月DBに保存
+fontScaleSlider.onchange = async () => {
+  const scale = Number(fontScaleSlider.value);
+
+  const year = parseInt(yearSelect.value);
+  const month = parseInt(monthSelect.value);
+  const monthId = `month-${year}-${month}`;
+
+  await db.months.update(monthId, {
+    fontScale: scale
+  });
+};
+
+
 
 const NOTICE_KEY = "update_notice_v2";
 
@@ -695,6 +742,23 @@ for(let y=2026;y<=2030;y++){ const opt=document.createElement("option"); opt.val
 const monthSelect=document.getElementById("monthSelect");
 for(let m=1;m<=12;m++){ const opt=document.createElement("option"); opt.value=m; opt.textContent=m; monthSelect.appendChild(opt);}
 
+// ===== 月切り替え時：日付サイズを反映 =====
+yearSelect.onchange = async () => {
+  await applyFontScaleForMonth(
+    parseInt(yearSelect.value),
+    parseInt(monthSelect.value)
+  );
+};
+
+monthSelect.onchange = async () => {
+  await applyFontScaleForMonth(
+    parseInt(yearSelect.value),
+    parseInt(monthSelect.value)
+  );
+};
+
+
+
 // ===== 月追加 =====
 document.getElementById("addSelectedMonth").onclick=async ()=>{
   const year=parseInt(yearSelect.value);
@@ -871,7 +935,7 @@ async function renderMonth(year, month){
     
   const noteInput = document.createElement("input");
     noteInput.type = "text";
-    noteInput.placeholder = "一言？";
+    noteInput.placeholder = "account?";
     noteInput.className = "month-note";
     noteInput.value = monthData.note || "";
     noteInput.onchange = async () => {
@@ -880,6 +944,8 @@ async function renderMonth(year, month){
     monthDiv.appendChild(noteInput);
 
   await loadCalendarBoardForMonth(year,month);
+  await applyFontScaleForMonth(year, month);
+
 }
 
 // ===== 月単位でスタンプ反映 =====
@@ -1078,37 +1144,54 @@ toggleBtn.onclick = () => {
 
 // ===== 書き出しボタン =====
 
-
 document.getElementById("downloadCalendarPng").onclick = async () => {
   const board = document.getElementById("calendarBoard");
 
-  // モーダルやボタンが映らないようにする場合
   document.body.classList.add("exporting");
 
-  // 少し待つ（iOS Safari 安定化）
-  await new Promise(r => setTimeout(r, 100));
+  try {
+    await new Promise(r => setTimeout(r, 100));
 
-  const canvas = await html2canvas(board, {
-    backgroundColor: "#ffffff", // 透明防止
-    scale: window.devicePixelRatio || 2,
-    useCORS: true
-  });
+    const canvas = await html2canvas(board, {
+      backgroundColor: null,
+      scale: window.devicePixelRatio || 2,
+      useCORS: true
+    });
 
-  document.body.classList.remove("exporting");
+    // ▼ 角丸マスク
+    const scale = window.devicePixelRatio || 2;
+    const r = 24 * scale;
+    const w = canvas.width;
+    const h = canvas.height;
 
-  const dataUrl = canvas.toDataURL("image/png");
+    const masked = document.createElement("canvas");
+    masked.width = w;
+    masked.height = h;
 
-  // iOS Safari 対応
-  const link = document.createElement("a");
-  link.href = dataUrl;
-  link.download = "calendar.png";
+    const ctx = masked.getContext("2d");
 
-  // iOS は click() ではDLされないことがある
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
+    ctx.beginPath();
+    ctx.moveTo(r, 0);
+    ctx.lineTo(w - r, 0);
+    ctx.quadraticCurveTo(w, 0, w, r);
+    ctx.lineTo(w, h - r);
+    ctx.quadraticCurveTo(w, h, w - r, h);
+    ctx.lineTo(r, h);
+    ctx.quadraticCurveTo(0, h, 0, h - r);
+    ctx.lineTo(0, r);
+    ctx.quadraticCurveTo(0, 0, r, 0);
+    ctx.closePath();
+
+    ctx.clip();
+    ctx.drawImage(canvas, 0, 0);
+
+    const dataUrl = masked.toDataURL("image/png");
+    window.open(dataUrl, "_blank");
+
+  } finally {
+    document.body.classList.remove("exporting");
+  }
 };
-
 
 // ===== アプデ注意書き =====
 
