@@ -304,13 +304,25 @@ function openCropModal(
     
     const cropModal = document.getElementById("cropModal");
 
-    // ★ 今回追加するのはこの1行（＋取得行）
     cropModal.classList.toggle("bg-mode", mode === "background");
     
     const borderEnable = document.getElementById("borderEnabled");
     const borderColor  = document.getElementById("borderColor");
     const borderSize   = document.getElementById("borderWidth");
     const borderOptions = document.getElementById("borderOptions");
+    
+    // ===== 縁UI制御=====
+    function updateBorderUI() {
+      if (!borderEnable || !borderOptions) return;
+
+      if (borderEnable.checked) {
+        borderOptions.classList.remove("border-disabled");
+      } else {
+        borderOptions.classList.add("border-disabled");
+      }
+    }
+
+    
     // null 安全化
     if (borderEnable) borderEnable.checked = false;
     if (borderColor)  borderColor.value = "#ff4d6d";
@@ -321,6 +333,9 @@ function openCropModal(
       color: borderColor?.value ?? "#ff4d6d",
       size: parseInt(borderSize?.value ?? "4", 10)
     };
+
+    // 初期UI反映
+    updateBorderUI();
 
     // イベント設定（null 安全）
     if (borderEnable) borderEnable.onchange = () => { borderState.enabled = borderEnable.checked; requestDraw(); };
@@ -347,16 +362,7 @@ function openCropModal(
       console.log("画像ロード完了", img.width, img.height); // <- ここ追加
       let needsRedraw = false;
       
-      const borderState = {
-        enabled: borderEnable.checked,
-        color: borderColor.value,
-        size: parseInt(borderSize.value, 10)
-      };
-      
-      borderEnable.onchange = null;
-      borderColor.oninput = null;
-      borderSize.oninput = null;
-
+     
       borderEnable.onchange = () => {
         borderState.enabled = borderEnable.checked;
         requestDraw();
