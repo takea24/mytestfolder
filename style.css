@@ -298,6 +298,10 @@ body.modal-open .floating-btn {
   justify-content: center;
   align-items: center;
   z-index: 1000;
+  height: 100svh;          /* ← iOS Safari対応 */
+  max-height: 100svh;
+  overflow-y: auto;        /* 下が切れてもスクロールできる */
+  -webkit-overflow-scrolling: touch;
 }
 
 .modal-content {
@@ -305,8 +309,8 @@ body.modal-open .floating-btn {
   padding: 20px;
   border-radius: 8px;
   max-width: 90%;
-  max-height: 80%;
-  overflow: auto;
+  max-height: calc(100svh - 40px);
+  overflow-y: auto;
 }
 
 
@@ -535,6 +539,8 @@ body.exporting .month-container {
   margin-top: 6px;
   max-width: 100%;
   max-height: 60vh;
+  width: auto;
+  height: auto;
   border-radius: 12px;
 }
 
@@ -556,4 +562,11 @@ body.exporting .month-container {
 #borderOptions.border-disabled .border-controls {
   opacity: 0.4;
   pointer-events: none;
+}
+
+.crop-footer {
+  position: sticky;
+  bottom: 0;
+  background: rgba(255,255,255,0.95);
+  padding-bottom: env(safe-area-inset-bottom);
 }
