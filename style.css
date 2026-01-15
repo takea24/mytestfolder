@@ -301,11 +301,6 @@ body.modal-open .floating-btn {
   -webkit-overflow-scrolling: touch;
 }
 
-#cropModal .modal-inner {
-  max-height: 80dvh;
-  overflow-y: auto;
-  -webkit-overflow-scrolling: touch;
-}
 
 
 
@@ -529,7 +524,7 @@ body.exporting .month-container {
 
 /* ===== 縁オプション ===== */
 /* shape-picker 以外の label を下段にまとめる */
-#borderOptions > label {
+#borderOptions .border-controls > label {
   display: flex;
   align-items: center;
   gap: 6px;
