@@ -570,3 +570,23 @@ body.exporting .month-container {
   background: rgba(255,255,255,0.95);
   padding-bottom: env(safe-area-inset-bottom);
 }
+
+/* 縁の色・太さを横並び */
+.border-controls {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 6px;
+}
+
+/* 各ラベルを縦並び（文字→input） */
+.border-controls label {
+  display: flex;
+  flex-direction: column;
+  font-size: 0.9em;
+}
+
+/* 太さスライダーの横幅 */
+#borderWidth {
+  width: 120px;
+}
