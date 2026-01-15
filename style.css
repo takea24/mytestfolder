@@ -507,13 +507,13 @@ body.exporting .month-container {
   align-items: center;
   justify-content: center;
 
-  width: 20px;
-  height: 20px;
+  width: 36px;
+  height: 36px;
   border-radius: 8px;
 
   background: #fff;
   border: 1px solid #ccc;
-  font-size: 10px;
+  font-size: 18px;
   cursor: pointer;
 }
 
