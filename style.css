@@ -294,7 +294,7 @@ body.modal-open .floating-btn {
 }
 
 #cropModal .modal-inner {
-  max-height: 90dvh;
+  max-height: 80dvh;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
 }
