@@ -184,17 +184,17 @@ async function loadStamps() {
       ["mouseup", "mouseleave", "touchend", "touchcancel"].forEach(ev =>
         item.addEventListener(ev, cancelLongPress)
       );
+        
+        // ===== 短押し（選択） =====
+        item.onclick = () => {
+          if (longPressed) {
+            longPressed = false;
+            return;
+          }
 
-      // ===== 短押し（選択） =====
-      item.onclick = () => {
-        if (longPressed) {
-          longPressed = false;
-          return;
-        }
+          // 単オシではなにもしない
+        };
 
-        // ← ここは「スタンプ選択処理」があればそのまま
-        // （現状は何もしなくてOK）
-      };
 
       grid.appendChild(item);
     });}
