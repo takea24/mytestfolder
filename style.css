@@ -463,20 +463,25 @@ body.exporting .month-container {
 }
 
 /* ===== 選択UI全体 ===== */
+/* ===== borderOptions 全体 ===== */
 #borderOptions {
   display: flex;
-  flex-wrap: wrap;
-  gap: 10px 12px;
-  justify-content: center;
+  flex-direction: column;
+  gap: 8px;
 
   padding: 10px;
   background: #f7f7f7;
   border-radius: 12px;
 }
-/* ===== 形状ピッカー ===== */
+
+/* ===== 形状 picker（上段） ===== */
 .shape-picker {
   display: flex;
-  gap: 6px;
+  justify-content: center;
+  gap: 8px;
+
+  padding-bottom: 6px;
+  border-bottom: 1px solid #ddd;
 }
 
 .shape-picker label {
@@ -505,13 +510,14 @@ body.exporting .month-container {
 }
 
 /* ===== 縁オプション ===== */
+/* shape-picker 以外の label を下段にまとめる */
 #borderOptions > label {
   display: flex;
-  flex-direction: column;
-  font-size: 12px;
-  gap: 4px;
   align-items: center;
+  gap: 6px;
+  font-size: 12px;
 }
+
 
 #borderOptions input[type="color"] {
   width: 36px;
@@ -537,4 +543,12 @@ body.exporting .month-container {
   width: 100%;
   font-size: 16px;
   padding: 10px 0;
+}
+
+@media (max-width: 480px) {
+  .border-controls,
+  #borderOptions > label {
+    flex-wrap: wrap;
+    justify-content: center;
+  }
 }
