@@ -28,7 +28,7 @@ db.version(14).stores({
   }
 });
 
-const NOTICE_KEY = "update_notice_v1";
+const NOTICE_KEY = "update_notice_v2";
 
 
 let scrollPos = 0;
@@ -1076,6 +1076,40 @@ toggleBtn.onclick = () => {
   }
 };
 
+// ===== 書き出しボタン =====
+
+
+document.getElementById("downloadCalendarPng").onclick = async () => {
+  const board = document.getElementById("calendarBoard");
+
+  // モーダルやボタンが映らないようにする場合
+  document.body.classList.add("exporting");
+
+  // 少し待つ（iOS Safari 安定化）
+  await new Promise(r => setTimeout(r, 100));
+
+  const canvas = await html2canvas(board, {
+    backgroundColor: "#ffffff", // 透明防止
+    scale: window.devicePixelRatio || 2,
+    useCORS: true
+  });
+
+  document.body.classList.remove("exporting");
+
+  const dataUrl = canvas.toDataURL("image/png");
+
+  // iOS Safari 対応
+  const link = document.createElement("a");
+  link.href = dataUrl;
+  link.download = "calendar.png";
+
+  // iOS は click() ではDLされないことがある
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+};
+
+
 // ===== アプデ注意書き =====
 
 
@@ -1093,11 +1127,11 @@ toggleBtn.onclick = () => {
 function showUpdateNotice() {
   alert(
     "アップデートのお知らせ\n\n" +
-    "・スタンプ一覧は長押しで削除になりました\n" +
-    "・最初、画像の表示が?になるかもしれません"+
-    "・しばらくしてリロードすると直ります"
+    "・カレンダー書き出しボタンを追加しました\n" 
   );
 }
+
+
 
 
 // ===== 初期化 =====

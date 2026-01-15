@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+
 <html lang="ja">
     <head>
         <meta charset="UTF-8">
@@ -28,9 +29,12 @@
                     <link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible+Mono&display=swap" rel="stylesheet">
                         
     </head>
+    
+    <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+
 <body>
 
-<h1>カレンダーボード型<br>スタンプアプリ ver1.2</h1>
+<h1>カレンダーボード型<br>スタンプアプリ ver1.3</h1>
 
 <button class="floating-btn" data-target="helpModal">はじめに見てね</button>
 
@@ -60,6 +64,12 @@
 <!-- 説明モーダル -->
 <div id="infoModal" class="modal">
   <div class="modal-content">
+      <h2> ver1.3更新履歴</h2>
+      <p>
+      カレンダー書き出しボタン追加<br>
+      UIを色々調整
+      </p>
+
       <h2> ver1.2更新履歴</h2>
       <p>
       DB更新により画像が一度表示されないかもしれません。リロードで直るはずです。<br>
@@ -86,7 +96,7 @@
 <h2>カレンダーボード</h2>
 <div id="calendarBoard"></div>
 
-
+<button id="downloadCalendarPng">PNGで保存</button>
 
 
 <section id="monthControlSection">
@@ -225,7 +235,7 @@
           縁の色
           <input type="color" id="borderColor" value="#ff0000">
       </label>
-      
+      <br>
       <label>
           縁の太さ
           <input type="range" id="borderWidth" min="1" max="20" value="10">
