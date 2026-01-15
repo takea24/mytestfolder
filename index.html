@@ -107,7 +107,18 @@
     </h2>
     <div id="monthSettingsBody">
         <!-- 以下折りたたまれる内容 -->
-        <h3>フォント設定</h3><br>
+        <h3>ボード追加・削除</h3>
+        <label>年:
+            <select id="yearSelect"></select>
+        </label>
+        <label>月:
+            <select id="monthSelect"></select>
+        </label>
+        <button id="addSelectedMonth">月追加</button>
+        <button id="deleteMonth">月削除</button>
+        <br>
+
+        <h3>フォント設定</h3>
         <label>
           文字サイズ
           <input
@@ -133,16 +144,12 @@
                 <span class="color-label">月</span>
                 <input type="color" id="monthColorPicker">
             </label>
-        </div>
-        
-        <div class="color-row">
+
             <label>
                 <span class="color-label">曜日</span>
                 <input type="color" id="weekdayColorPicker">
             </label>
-        </div>
         
-        <div class="color-row">
             <label>
                 <span class="color-label">日付</span>
                 <input type="color" id="dateColorPicker">
@@ -163,15 +170,7 @@
             </label>
         </div>
         
-        <h3>ボード追加・削除</h3><br>
-        <label>年:
-            <select id="yearSelect"></select>
-        </label>
-        <label>月:
-            <select id="monthSelect"></select>
-        </label>
-        <button id="addSelectedMonth">月追加</button>
-        <button id="deleteMonth">月削除</button>
+       
         
     </div>
 </section>
