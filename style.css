@@ -552,3 +552,11 @@ body.exporting .month-container {
     justify-content: center;
   }
 }
+/* ===== 縁OFF時：色・太さを無効化 ===== */
+#borderOptions:has(#borderEnabled:not(:checked))
+  #borderColor,
+#borderOptions:has(#borderEnabled:not(:checked))
+  #borderSize {
+  opacity: 0.4;
+  pointer-events: none;
+}
