@@ -948,7 +948,7 @@ async function renderMonth(year, month){
     
   const noteInput = document.createElement("input");
     noteInput.type = "text";
-    noteInput.placeholder = "account?";
+    noteInput.placeholder = "account name?";
     noteInput.className = "month-note";
     noteInput.value = monthData.note || "";
     noteInput.onchange = async () => {
@@ -1224,7 +1224,7 @@ document.getElementById("downloadCalendarPng").onclick = async () => {
     img.style.borderRadius = "14px"; // カレンダーと同じ角丸
     img.style.objectFit = "contain";
     img.style.cursor = "pointer"; // 長押しで保存想定
-    img.style.marginBottom = "10px";
+    img.style.marginBottom = "40px";
 
     // モバイルで長押しすると画像保存できるようにヒント表示
     const hint = document.createElement("div");
@@ -1258,6 +1258,8 @@ document.getElementById("downloadCalendarPng").onclick = async () => {
     document.body.classList.remove("exporting");
   }
 };
+
+
 
 // ===== アプデ注意書き =====
 

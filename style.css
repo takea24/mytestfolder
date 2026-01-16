@@ -204,7 +204,7 @@ h2 { margin-top: 30px; }
 
 .month-note {
   margin-left: 15px;   /* 左に余白 */
-  margin-bottom: 5px;    /* 下 */
+  margin-bottom: 10px;    /* 下 */
   background: none;
   border: none;
   display: block;                 /* ブロックにして枠幅を揃える */
