@@ -1219,9 +1219,12 @@ document.getElementById("downloadCalendarPng").onclick = async () => {
     const img = document.createElement("img");
     img.src = dataUrl;
     img.style.maxWidth = "95%";
-    img.style.maxHeight = "80%";
+    img.style.maxHeight = "95%";
     img.style.borderRadius = "12px";
     img.style.marginBottom = "20px";
+    img.style.objectFit = "contain";
+    img.style.width = "auto";
+    img.style.height = "auto";
 
     // DLリンク
     const link = document.createElement("a");

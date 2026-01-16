@@ -224,7 +224,8 @@ h2 { margin-top: 30px; }
 }
 .month-stats img {
   width: 100%;
-  height: 40px;
+  height: auto;
+  aspect-ratio: 1 / 1
   object-fit: cover;
   border-radius: 6px;
 }
