@@ -1169,9 +1169,9 @@ document.getElementById("downloadCalendarPng").onclick = async () => {
       useCORS: true
     });
 
-    // ▼ 角丸マスク
+    // ▼ 角丸マスク（カレンダーボードの border-radius に合わせる）
     const scale = window.devicePixelRatio || 2;
-    const r = 24 * scale;
+    const r = 14 * scale; // CSSのborder-radius 14pxに合わせた
     const w = canvas.width;
     const h = canvas.height;
 
@@ -1192,66 +1192,64 @@ document.getElementById("downloadCalendarPng").onclick = async () => {
     ctx.lineTo(0, r);
     ctx.quadraticCurveTo(0, 0, r, 0);
     ctx.closePath();
-
     ctx.clip();
+
     ctx.drawImage(canvas, 0, 0);
 
-    // ▼ データURL作成
     const dataUrl = masked.toDataURL("image/png");
 
-    // ▼ モーダル用要素を作成
+    // ▼ モーダル作成
     const modal = document.createElement("div");
-    modal.style.position = "fixed";
-    modal.style.top = 0;
-    modal.style.left = 0;
-    modal.style.width = "100%";
-    modal.style.height = "100%";
-    modal.style.background = "rgba(0,0,0,0.8)";
-    modal.style.display = "flex";
-    modal.style.flexDirection = "column";
-    modal.style.justifyContent = "center";
-    modal.style.alignItems = "center";
-    modal.style.zIndex = 9999;
-    modal.style.padding = "10px";
-    modal.style.overflow = "auto";
+    Object.assign(modal.style, {
+      position: "fixed",
+      top: 0,
+      left: 0,
+      width: "100%",
+      height: "100%",
+      background: "rgba(0,0,0,0.8)",
+      display: "flex",
+      flexDirection: "column",
+      justifyContent: "center",
+      alignItems: "center",
+      zIndex: 9999,
+      padding: "10px",
+      overflow: "auto"
+    });
 
-    // 画像表示
+    // 画像表示（角丸維持）
     const img = document.createElement("img");
     img.src = dataUrl;
     img.style.maxWidth = "95%";
     img.style.maxHeight = "95%";
-    img.style.borderRadius = "12px";
-    img.style.marginBottom = "20px";
+    img.style.borderRadius = "14px"; // カレンダーと同じ角丸
     img.style.objectFit = "contain";
-    img.style.width = "auto";
-    img.style.height = "auto";
+    img.style.cursor = "pointer"; // 長押しで保存想定
+    img.style.marginBottom = "10px";
 
-    // DLリンク
-    const link = document.createElement("a");
-    link.href = dataUrl;
-    link.download = "calendar.png";
-    link.textContent = "上の画像（またはここ）を長押しして手動保存";
-    link.style.fontSize = "18px";
-    link.style.color = "#fff";
-    link.style.background = "#28a745";
-    link.style.padding = "10px 20px";
-    link.style.borderRadius = "8px";
-    link.style.textDecoration = "none";
+    // モバイルで長押しすると画像保存できるようにヒント表示
+    const hint = document.createElement("div");
+    hint.textContent = "画像を長押しして保存してください";
+    Object.assign(hint.style, {
+      color: "#fff",
+      fontSize: "16px",
+      marginBottom: "20px",
+      textAlign: "center"
+    });
 
     // 閉じるボタン
     const closeBtn = document.createElement("button");
     closeBtn.textContent = "閉じる";
-    closeBtn.style.marginTop = "20px";
-    closeBtn.style.padding = "8px 16px";
-    closeBtn.style.border = "none";
-    closeBtn.style.borderRadius = "6px";
-    closeBtn.style.cursor = "pointer";
-
+    Object.assign(closeBtn.style, {
+      padding: "8px 16px",
+      border: "none",
+      borderRadius: "6px",
+      cursor: "pointer"
+    });
     closeBtn.onclick = () => document.body.removeChild(modal);
 
     // モーダルに追加
     modal.appendChild(img);
-    modal.appendChild(link);
+    modal.appendChild(hint);
     modal.appendChild(closeBtn);
 
     document.body.appendChild(modal);

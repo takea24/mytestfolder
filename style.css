@@ -203,8 +203,17 @@ h2 { margin-top: 30px; }
 }
 
 .month-note {
-  margin-left: 8px;   /* 左に余白 */
-  margin-bottom: 6px;    /* 下 */
+  margin-left: 15px;   /* 左に余白 */
+  margin-bottom: 5px;    /* 下 */
+  background: none;
+  border: none;
+  display: block;                 /* ブロックにして枠幅を揃える */
+　width: 100%;                    /* 親 div の幅に合わせる */
+　text-align: left;             /* 中央揃え */
+　font-size: calc(10px * var(--calendar-font-scale));
+　white-space: nowrap;            /* 改行させず */
+　overflow: hidden;               /* はみ出す部分を隠す */
+　text-overflow: ellipsis;        /* はみ出す文字は…に */
 }
 
 /* 月ごとのスタンプ使用回数 */
