@@ -1156,13 +1156,11 @@ toggleBtn.onclick = () => {
 };
 
 // ===== 書き出しボタン =====
-
 document.getElementById("downloadCalendarPng").onclick = async () => {
   const board = document.getElementById("calendarBoard");
   document.body.classList.add("exporting");
 
   try {
-    // 少し待ってスタイル反映を確実に
     await new Promise(r => setTimeout(r, 100));
 
     const canvas = await html2canvas(board, {
@@ -1198,9 +1196,62 @@ document.getElementById("downloadCalendarPng").onclick = async () => {
     ctx.clip();
     ctx.drawImage(canvas, 0, 0);
 
-    // ▼ 画像を新しいタブで開く（端末問わず統一）
+    // ▼ データURL作成
     const dataUrl = masked.toDataURL("image/png");
-    window.open(dataUrl, "_blank");
+
+    // ▼ モーダル用要素を作成
+    const modal = document.createElement("div");
+    modal.style.position = "fixed";
+    modal.style.top = 0;
+    modal.style.left = 0;
+    modal.style.width = "100%";
+    modal.style.height = "100%";
+    modal.style.background = "rgba(0,0,0,0.8)";
+    modal.style.display = "flex";
+    modal.style.flexDirection = "column";
+    modal.style.justifyContent = "center";
+    modal.style.alignItems = "center";
+    modal.style.zIndex = 9999;
+    modal.style.padding = "10px";
+    modal.style.overflow = "auto";
+
+    // 画像表示
+    const img = document.createElement("img");
+    img.src = dataUrl;
+    img.style.maxWidth = "95%";
+    img.style.maxHeight = "80%";
+    img.style.borderRadius = "12px";
+    img.style.marginBottom = "20px";
+
+    // DLリンク
+    const link = document.createElement("a");
+    link.href = dataUrl;
+    link.download = "calendar.png";
+    link.textContent = "ここをクリックして画像を保存";
+    link.style.fontSize = "18px";
+    link.style.color = "#fff";
+    link.style.background = "#28a745";
+    link.style.padding = "10px 20px";
+    link.style.borderRadius = "8px";
+    link.style.textDecoration = "none";
+
+    // 閉じるボタン
+    const closeBtn = document.createElement("button");
+    closeBtn.textContent = "閉じる";
+    closeBtn.style.marginTop = "20px";
+    closeBtn.style.padding = "8px 16px";
+    closeBtn.style.border = "none";
+    closeBtn.style.borderRadius = "6px";
+    closeBtn.style.cursor = "pointer";
+
+    closeBtn.onclick = () => document.body.removeChild(modal);
+
+    // モーダルに追加
+    modal.appendChild(img);
+    modal.appendChild(link);
+    modal.appendChild(closeBtn);
+
+    document.body.appendChild(modal);
 
   } finally {
     document.body.classList.remove("exporting");
