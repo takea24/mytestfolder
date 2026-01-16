@@ -1230,7 +1230,7 @@ document.getElementById("downloadCalendarPng").onclick = async () => {
     const link = document.createElement("a");
     link.href = dataUrl;
     link.download = "calendar.png";
-    link.textContent = "ここをクリックして画像を保存";
+    link.textContent = "上の画像（またはここ）を長押しして手動保存";
     link.style.fontSize = "18px";
     link.style.color = "#fff";
     link.style.background = "#28a745";
