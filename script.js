@@ -1159,10 +1159,10 @@ toggleBtn.onclick = () => {
 
 document.getElementById("downloadCalendarPng").onclick = async () => {
   const board = document.getElementById("calendarBoard");
-
   document.body.classList.add("exporting");
 
   try {
+    // 少し待ってスタイル反映を確実に
     await new Promise(r => setTimeout(r, 100));
 
     const canvas = await html2canvas(board, {
@@ -1198,6 +1198,7 @@ document.getElementById("downloadCalendarPng").onclick = async () => {
     ctx.clip();
     ctx.drawImage(canvas, 0, 0);
 
+    // ▼ 画像を新しいタブで開く（端末問わず統一）
     const dataUrl = masked.toDataURL("image/png");
     window.open(dataUrl, "_blank");
 
