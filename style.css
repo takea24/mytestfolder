@@ -120,6 +120,24 @@ h2 { margin-top: 30px; }
     border-radius: 10px;
 }
 
+.stamp-size-ui {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+#stampSizeSlider {
+  flex: 1;
+}
+
+#stampSizeValue {
+  min-width: 3.5em;
+  text-align: right;
+  font-family: "Atkinson Hyperlegible Mono", monospace;
+  font-size: 14px;
+}
+
+
 .week-row {
   display: grid;
   grid-template-columns: repeat(7, 1fr); /* 7列で均等幅 */
@@ -173,6 +191,7 @@ h2 { margin-top: 30px; }
 /* 月タイトル・コンテナ */
 .month-container {
   position: relative;
+  max-width: 100%;
   margin-bottom: 40px;
   border-radius: 8px;
   overflow: hidden;
@@ -203,17 +222,23 @@ h2 { margin-top: 30px; }
 }
 
 .month-note {
+  max-width: 20%; /* margin-left 分を引く */
+  box-sizing: border-box;
   margin-left: 15px;   /* 左に余白 */
   margin-bottom: 10px;    /* 下 */
   background: none;
   border: none;
+  height: 1.6em;               /* ← 明示 */
+  line-height: 1.6em;          /* ← 超重要 */
+  padding: 0 4px;              /* ← 文字の上下余白を安定させる */
   display: block;                 /* ブロックにして枠幅を揃える */
-　width: 100%;                    /* 親 div の幅に合わせる */
-　text-align: left;             /* 中央揃え */
-　font-size: calc(10px * var(--calendar-font-scale));
-　white-space: nowrap;            /* 改行させず */
-　overflow: hidden;               /* はみ出す部分を隠す */
-　text-overflow: ellipsis;        /* はみ出す文字は…に */
+  width: 100%;                    /* 親 div の幅に合わせる */
+  text-align: left;             /* 中央揃え */
+  font-size: calc(10px * var(--calendar-font-scale));
+  white-space: nowrap;            /* 改行させず */
+  overflow: hidden;               /* はみ出す部分を隠す */
+  text-overflow: ellipsis;        /* はみ出す文字は…に */
+  background-color: rgba(0, 0, 0, 0.08); /* 日付と同系の薄さ */
 }
 
 /* 月ごとのスタンプ使用回数 */
@@ -232,11 +257,13 @@ h2 { margin-top: 30px; }
   width: 50px;
 }
 .month-stats img {
-  width: 100%;
+  width: 60%;
   height: auto;
   aspect-ratio: 1 / 1
   object-fit: cover;
   border-radius: 6px;
+  margin: 0 auto;          /* 中央寄せ */
+  display: block;
 }
 .month-stats span {
   display: inline-block;
@@ -484,6 +511,16 @@ body.exporting .content-layer {
 body.exporting .month-container {
   overflow: visible !important;
 }
+
+.export-spacer {
+  height: 20px;          /* 好きなだけ */
+}
+
+/* 書き出し時だけ効かせる */
+body.exporting .export-spacer {
+  height: 20px;
+}
+
 
 /* ===== 選択UI全体 ===== */
 /* ===== borderOptions 全体 ===== */

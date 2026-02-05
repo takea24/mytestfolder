@@ -727,8 +727,16 @@ async function showStampPicker(cellId){
 
     // 追加: サイズスライダーを表示
     const sliderContainer = document.getElementById("stampSizeContainer");
+
     let slider = document.getElementById("stampSizeSlider");
+    let valueLabel = document.getElementById("stampSizeValue");
+
     if (!slider) {
+      // ラッパー
+      const wrapper = document.createElement("div");
+      wrapper.className = "stamp-size-ui";
+
+      // slider
       slider = document.createElement("input");
       slider.type = "range";
       slider.min = 0.5;
@@ -736,9 +744,23 @@ async function showStampPicker(cellId){
       slider.step = 0.05;
       slider.value = 1;
       slider.id = "stampSizeSlider";
-      slider.style.width = "100%";
-      sliderContainer.appendChild(slider);
+
+      // 数値表示
+      valueLabel = document.createElement("span");
+      valueLabel.id = "stampSizeValue";
+      valueLabel.textContent = Number(slider.value).toFixed(2);
+
+      // 組み立て
+      wrapper.appendChild(slider);
+      wrapper.appendChild(valueLabel);
+      sliderContainer.appendChild(wrapper);
+
+      // スライダー操作時に数値更新
+      slider.addEventListener("input", () => {
+        valueLabel.textContent = Number(slider.value).toFixed(2);
+      });
     }
+
 
   openModal(picker);
 }
@@ -955,6 +977,12 @@ async function renderMonth(year, month){
     await db.months.update(`month-${year}-${month}`, { note: noteInput.value });
       };
     monthDiv.appendChild(noteInput);
+    
+    // ★ 書き出し用スペーサー
+    const exportSpacer = document.createElement("div");
+    exportSpacer.className = "export-spacer";
+    monthDiv.appendChild(exportSpacer);
+
 
   await loadCalendarBoardForMonth(year,month);
   await applyFontScaleForMonth(year, month);
