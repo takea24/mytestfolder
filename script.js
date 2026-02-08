@@ -27,6 +27,29 @@ db.version(14).stores({
     await tx.table("stamps").put(stamp);
   }
 });
+
+db.version(15).stores({
+  stamps: "id,name,image,shape",
+  histories: "id,stampId,date,size",
+  months: "id,year,month,bgImage,bgBrightness,bgOpacity,dateFont",
+  settings: "key"
+}).upgrade(async tx => {
+
+  // 既存 histories 対策（そのまま）
+  await tx.table("histories").toCollection().modify(h => {
+    if (!h.size) h.size = 1;
+  });
+
+  // ★ 月データに dateFont が無い人だけ初期値を入れる
+  await tx.table("months").toCollection().modify(m => {
+    if (!m.dateFont) {
+      m.dateFont = "system-ui"; // ← デフォルト
+    }
+  });
+
+});
+
+
 // ===== カレンダー文字サイズ設定（全部連動） =====
 const fontScaleSlider = document.getElementById("calendarFontScale");
 
@@ -778,18 +801,28 @@ const monthSelect=document.getElementById("monthSelect");
 for(let m=1;m<=12;m++){ const opt=document.createElement("option"); opt.value=m; opt.textContent=m; monthSelect.appendChild(opt);}
 
 // ===== 月切り替え時：日付サイズを反映 =====
+async function applyDateFontForMonth(year, month) {
+  const monthData = await db.months.get(`month-${year}-${month}`);
+  const font = monthData?.dateFont || "'Zen Kaku Gothic New', normal";
+
+  applyDateFont(font);
+  dateFontSelect.value = font;
+}
+
 yearSelect.onchange = async () => {
-  await applyFontScaleForMonth(
-    parseInt(yearSelect.value),
-    parseInt(monthSelect.value)
-  );
+  const y = parseInt(yearSelect.value);
+  const m = parseInt(monthSelect.value);
+
+  await applyFontScaleForMonth(y, m);
+  await applyDateFontForMonth(y, m);
 };
 
 monthSelect.onchange = async () => {
-  await applyFontScaleForMonth(
-    parseInt(yearSelect.value),
-    parseInt(monthSelect.value)
-  );
+  const y = parseInt(yearSelect.value);
+  const m = parseInt(monthSelect.value);
+
+  await applyFontScaleForMonth(y, m);
+  await applyDateFontForMonth(y, m);
 };
 
 
@@ -1086,9 +1119,18 @@ async function applyDateFont(font) {
 
 dateFontSelect.onchange = async () => {
   const font = dateFontSelect.value;
-  await db.settings.put({ key: "dateFont", value: font });
+
   applyDateFont(font);
+
+  const year = parseInt(yearSelect.value);
+  const month = parseInt(monthSelect.value);
+
+  await db.months.update(`month-${year}-${month}`, {
+    dateFont: font
+  });
 };
+
+
 
 dateColorPicker.onchange = async () => {
   const color = dateColorPicker.value;
@@ -1108,31 +1150,30 @@ weekdayColorPicker.onchange = async () => {
   applyWeekdayColor(color);
 };
 
+
 (async () => {
+  const year = parseInt(yearSelect.value);
+  const month = parseInt(monthSelect.value);
+
+  const monthData = await db.months.get(`month-${year}-${month}`);
+
+  const font = monthData?.dateFont || "'Zen Kaku Gothic New', normal";
+  applyDateFont(font);
+  dateFontSelect.value = font;
+
   const dateColor = await db.settings.get("dateColor");
-  if (dateColor) {
-    dateColorPicker.value = dateColor.value;
-    applyDateColor(dateColor.value);
-  } else {
-    applyDateColor("#333333");
-  }
+  applyDateColor(dateColor?.value || "#333333");
+  dateColorPicker.value = dateColor?.value || "#333333";
 
   const monthColor = await db.settings.get("monthColor");
-  if (monthColor) {
-    monthColorPicker.value = monthColor.value;
-    applyMonthColor(monthColor.value);
-  } else {
-    applyMonthColor("#333333");
-  }
+  applyMonthColor(monthColor?.value || "#333333");
+  monthColorPicker.value = monthColor?.value || "#333333";
 
   const weekdayColor = await db.settings.get("weekdayColor");
-  if (weekdayColor) {
-    weekdayColorPicker.value = weekdayColor.value;
-    applyWeekdayColor(weekdayColor.value);
-  } else {
-    applyWeekdayColor("#333333");
-  }
+  applyWeekdayColor(weekdayColor?.value || "#333333");
+  weekdayColorPicker.value = weekdayColor?.value || "#333333";
 })();
+
 
 
 
