@@ -222,7 +222,7 @@ h2 { margin-top: 30px; }
 }
 
 .month-note {
-  max-width: 20%; /* margin-left 分を引く */
+  max-width: 40%; /* margin-left 分を引く */
   box-sizing: border-box;
   margin-left: 15px;   /* 左に余白 */
   margin-bottom: 10px;    /* 下 */
@@ -243,37 +243,102 @@ h2 { margin-top: 30px; }
 
 /* 月ごとのスタンプ使用回数 */
 .month-stats {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 5px;
-  margin-top: 10px; /* ボード下部との余白 */
-  position: relative; /* 背景より前面に表示 */
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(60px, 1fr));
+  gap: 10px;
+  margin-top: 14px;
+  position: relative;
   z-index: 2;
   font-family: var(--calendar-date-font);
   color: var(--calendar-date-color);
 }
+
+/* 各スタンプカード */
 .month-stats div {
-  text-align: center;
-  width: 50px;
+  position: relative;
+  aspect-ratio: 1 / 1;
+  border-radius: 12px;
+  background: rgba(255,255,255,0.15);
+  backdrop-filter: blur(6px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  transition: transform 0.2s ease;
 }
+
+.month-stats div:hover {
+  transform: scale(1.05);
+}
+
+/* スタンプ画像 */
 .month-stats img {
-  width: 60%;
+  width: 65%;
   height: auto;
-  aspect-ratio: 1 / 1
-  object-fit: cover;
-  border-radius: 6px;
-  margin: 0 auto;          /* 中央寄せ */
-  display: block;
+  object-fit: contain;
+  border-radius: 8px;
 }
+
+/* 個数バッジ */
 .month-stats span {
-  display: inline-block;
-  background: rgba(255,255,255,0.35); /* 日付より薄く */
-  border-radius: 4px;
-  padding: 2px 4px;
+  position: absolute;
+  bottom: 6px;
+  right: 6px;
+  background: rgba(0,0,0,0.65);
+  color: #fff;
+  border-radius: 999px;
+  padding: 2px 6px;
   font-size: calc(10px * var(--calendar-font-scale));
-  color: var(--calendar-date-color);
-  text-align: center;
+  font-weight: 600;
 }
+
+@media (max-width: 600px) {
+
+  .month-stats {
+    display: grid;
+    grid-template-columns: repeat(10, 1fr);
+    gap: 2px;
+  }
+
+  .month-stats div {
+    position: relative;
+    aspect-ratio: 1 / 1;
+    border-radius: 6px;
+    background: transparent;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 0;
+  }
+
+  .month-stats img {
+    width: 90%;          /* できるだけ大きく */
+    height: auto;
+    object-fit: contain;
+  }
+
+  /* 数字はスタンプに直接重ねる */
+  .month-stats span {
+    position: absolute;
+    bottom: 2px;
+    right: 2px;
+
+    font-size: 8px;
+    font-weight: 600;
+
+    background: rgba(0,0,0,0.75);
+    color: #fff;
+
+    padding: 1px 3px;
+    border-radius: 999px;
+
+    line-height: 1;
+    min-width: 12px;
+    text-align: center;
+  }
+}
+
+
+
 
 /* 背景スライダー縦配置（横スライダー） */
 .bg-controls {

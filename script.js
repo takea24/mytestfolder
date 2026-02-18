@@ -1175,19 +1175,37 @@ async function loadCalendarBoardForMonth(year,month){
   }
 
   const monthStats=document.querySelector(`#calendarBoard .month-container[data-year='${year}'][data-month='${month}'] .month-stats`);
-  if(monthStats){
-    monthStats.innerHTML="";
-    const stamps=await db.stamps.toArray();
-    stamps.forEach(s=>{
-      const count=histories.filter(h=>h.stampId===s.id).length;
-      if(count===0) return;
-      const div=document.createElement("div");
-      const img=document.createElement("img"); img.src=URL.createObjectURL(s.image); div.appendChild(img);
-          img.classList.add("stamp-image");
-      const label=document.createElement("span"); label.textContent=count; div.appendChild(label);
-      monthStats.appendChild(div);
-    });
-  }
+    if(monthStats){
+      monthStats.innerHTML="";
+
+      const stamps = await db.stamps.toArray();
+
+      // ① カウント付き配列を作る
+      const stampCounts = stamps.map(s => {
+        return {
+          stamp: s,
+          count: histories.filter(h => h.stampId === s.id).length
+        };
+      })
+      .filter(item => item.count > 0)   // ② 0は除外
+      .sort((a,b) => b.count - a.count); // ③ 多い順にソート
+
+      // ④ 表示
+      stampCounts.forEach(item=>{
+        const div=document.createElement("div");
+          
+        const img=document.createElement("img");
+        img.src=URL.createObjectURL(item.stamp.image);
+        img.classList.add("stamp-image");
+        div.appendChild(img);
+
+        const label=document.createElement("span");
+        label.textContent=item.count;
+        div.appendChild(label);
+
+        monthStats.appendChild(div);
+      });
+    }
 }
 
 // ===== 全体更新 =====
