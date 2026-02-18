@@ -1132,6 +1132,10 @@ async function renderMonth(year, month){
     // 最後にボタンを追加する
     contentLayer.appendChild(saveBtn);
 
+    await loadCalendarBoardForMonth(year,month);
+    await applyFontScaleForMonth(year, month);
+
+    
 }
 
 // ===== 月単位でスタンプ反映 =====
