@@ -1000,7 +1000,7 @@ async function renderMonth(year, month){
 
   const monthStats=document.createElement("div"); monthStats.className="month-stats"; contentLayer.appendChild(monthStats);
   container.appendChild(monthDiv);
-    
+        
   const noteInput = document.createElement("input");
     noteInput.type = "text";
     noteInput.placeholder = "account name?";
@@ -1009,16 +1009,128 @@ async function renderMonth(year, month){
     noteInput.onchange = async () => {
     await db.months.update(`month-${year}-${month}`, { note: noteInput.value });
       };
-    monthDiv.appendChild(noteInput);
+    contentLayer.appendChild(noteInput);
     
     // ★ 書き出し用スペーサー
     const exportSpacer = document.createElement("div");
     exportSpacer.className = "export-spacer";
-    monthDiv.appendChild(exportSpacer);
+    contentLayer.appendChild(exportSpacer);
+    
+    // ===== 月ごとの書き出しボタン =====
+    const saveBtn = document.createElement("button");
+    saveBtn.textContent = "この月を画像で保存";
+    saveBtn.className = "month-save-btn";
+
+    saveBtn.onclick = async () => {
+
+      // ★ ここを board → monthDiv に変更
+      const target = monthDiv;
+        
+      // ★ ボタンを一時的に隠す
+      saveBtn.style.display = "none";
+
+      document.body.classList.add("exporting");
+
+      try {
+        await new Promise(r => setTimeout(r, 100));
+
+        const canvas = await html2canvas(target, {
+          backgroundColor: null,
+          scale: window.devicePixelRatio || 2,
+          useCORS: true
+        });
+
+        // ▼ 角丸マスク（14px）
+        const scale = window.devicePixelRatio || 2;
+        const r = 14 * scale;
+        const w = canvas.width;
+        const h = canvas.height;
+
+        const masked = document.createElement("canvas");
+        masked.width = w;
+        masked.height = h;
+
+        const ctx = masked.getContext("2d");
+
+        ctx.beginPath();
+        ctx.moveTo(r, 0);
+        ctx.lineTo(w - r, 0);
+        ctx.quadraticCurveTo(w, 0, w, r);
+        ctx.lineTo(w, h - r);
+        ctx.quadraticCurveTo(w, h, w - r, h);
+        ctx.lineTo(r, h);
+        ctx.quadraticCurveTo(0, h, 0, h - r);
+        ctx.lineTo(0, r);
+        ctx.quadraticCurveTo(0, 0, r, 0);
+        ctx.closePath();
+        ctx.clip();
+
+        ctx.drawImage(canvas, 0, 0);
+
+        const dataUrl = masked.toDataURL("image/png");
+
+        // ▼ モーダル
+        const modal = document.createElement("div");
+        Object.assign(modal.style, {
+          position: "fixed",
+          top: 0,
+          left: 0,
+          width: "100%",
+          height: "100%",
+          background: "rgba(0,0,0,0.8)",
+          display: "flex",
+          flexDirection: "column",
+          justifyContent: "center",
+          alignItems: "center",
+          zIndex: 9999,
+          padding: "10px",
+          overflow: "auto"
+        });
+
+        const img = document.createElement("img");
+        img.src = dataUrl;
+        img.style.maxWidth = "95%";
+        img.style.maxHeight = "95%";
+        img.style.borderRadius = "14px";
+        img.style.objectFit = "contain";
+        img.style.cursor = "pointer";
+        img.style.marginBottom = "40px";
+
+        const hint = document.createElement("div");
+        hint.textContent = "画像を長押しして保存してください";
+        Object.assign(hint.style, {
+          color: "#fff",
+          fontSize: "16px",
+          marginBottom: "20px",
+          textAlign: "center"
+        });
+
+        const closeBtn = document.createElement("button");
+        closeBtn.textContent = "閉じる";
+        Object.assign(closeBtn.style, {
+          padding: "8px 16px",
+          border: "none",
+          borderRadius: "6px",
+          cursor: "pointer"
+        });
+
+        closeBtn.onclick = () => document.body.removeChild(modal);
+
+        modal.appendChild(img);
+        modal.appendChild(hint);
+        modal.appendChild(closeBtn);
+
+        document.body.appendChild(modal);
+
+      } finally {
+        saveBtn.style.display = "block";
+        document.body.classList.remove("exporting");
+      }
+    };
 
 
-  await loadCalendarBoardForMonth(year,month);
-  await applyFontScaleForMonth(year, month);
+    // 最後にボタンを追加する
+    contentLayer.appendChild(saveBtn);
 
 }
 
@@ -1224,109 +1336,6 @@ toggleBtn.onclick = () => {
   }
 };
 
-// ===== 書き出しボタン =====
-document.getElementById("downloadCalendarPng").onclick = async () => {
-  const board = document.getElementById("calendarBoard");
-  document.body.classList.add("exporting");
-
-  try {
-    await new Promise(r => setTimeout(r, 100));
-
-    const canvas = await html2canvas(board, {
-      backgroundColor: null,
-      scale: window.devicePixelRatio || 2,
-      useCORS: true
-    });
-
-    // ▼ 角丸マスク（カレンダーボードの border-radius に合わせる）
-    const scale = window.devicePixelRatio || 2;
-    const r = 14 * scale; // CSSのborder-radius 14pxに合わせた
-    const w = canvas.width;
-    const h = canvas.height;
-
-    const masked = document.createElement("canvas");
-    masked.width = w;
-    masked.height = h;
-
-    const ctx = masked.getContext("2d");
-
-    ctx.beginPath();
-    ctx.moveTo(r, 0);
-    ctx.lineTo(w - r, 0);
-    ctx.quadraticCurveTo(w, 0, w, r);
-    ctx.lineTo(w, h - r);
-    ctx.quadraticCurveTo(w, h, w - r, h);
-    ctx.lineTo(r, h);
-    ctx.quadraticCurveTo(0, h, 0, h - r);
-    ctx.lineTo(0, r);
-    ctx.quadraticCurveTo(0, 0, r, 0);
-    ctx.closePath();
-    ctx.clip();
-
-    ctx.drawImage(canvas, 0, 0);
-
-    const dataUrl = masked.toDataURL("image/png");
-
-    // ▼ モーダル作成
-    const modal = document.createElement("div");
-    Object.assign(modal.style, {
-      position: "fixed",
-      top: 0,
-      left: 0,
-      width: "100%",
-      height: "100%",
-      background: "rgba(0,0,0,0.8)",
-      display: "flex",
-      flexDirection: "column",
-      justifyContent: "center",
-      alignItems: "center",
-      zIndex: 9999,
-      padding: "10px",
-      overflow: "auto"
-    });
-
-    // 画像表示（角丸維持）
-    const img = document.createElement("img");
-    img.src = dataUrl;
-    img.style.maxWidth = "95%";
-    img.style.maxHeight = "95%";
-    img.style.borderRadius = "14px"; // カレンダーと同じ角丸
-    img.style.objectFit = "contain";
-    img.style.cursor = "pointer"; // 長押しで保存想定
-    img.style.marginBottom = "40px";
-
-    // モバイルで長押しすると画像保存できるようにヒント表示
-    const hint = document.createElement("div");
-    hint.textContent = "画像を長押しして保存してください";
-    Object.assign(hint.style, {
-      color: "#fff",
-      fontSize: "16px",
-      marginBottom: "20px",
-      textAlign: "center"
-    });
-
-    // 閉じるボタン
-    const closeBtn = document.createElement("button");
-    closeBtn.textContent = "閉じる";
-    Object.assign(closeBtn.style, {
-      padding: "8px 16px",
-      border: "none",
-      borderRadius: "6px",
-      cursor: "pointer"
-    });
-    closeBtn.onclick = () => document.body.removeChild(modal);
-
-    // モーダルに追加
-    modal.appendChild(img);
-    modal.appendChild(hint);
-    modal.appendChild(closeBtn);
-
-    document.body.appendChild(modal);
-
-  } finally {
-    document.body.classList.remove("exporting");
-  }
-};
 
 
 

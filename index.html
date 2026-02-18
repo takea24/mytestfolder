@@ -33,7 +33,7 @@
 
 <body>
 
-<h1>カレンダーボード型<br>スタンプアプリ ver1.3</h1>
+<h1>カレンダーボード型<br>スタンプアプリ ver1.3.2</h1>
 
 <button class="floating-btn" data-target="helpModal">はじめに見てね</button>
 
@@ -63,10 +63,18 @@
 <!-- 説明モーダル -->
 <div id="infoModal" class="modal">
   <div class="modal-content">
+      <h2> ver1.3.2更新履歴</h2>
+      <p>
+      カレンダー書き出しボタン修正（各月表示に）<br>
+      </p>
+      
       <h2> ver1.3更新履歴</h2>
       <p>
       カレンダー書き出しボタン追加（おためし）<br>
-      UIを色々調整
+      フォントが保存されてない問題を解決（？）<br>
+      スタンプを押す際のサイズを数値化<br>
+      UIを色々調整<br>
+      （既存データ消えたらすいません）
       </p>
 
       <h2> ver1.2更新履歴</h2>
@@ -95,8 +103,6 @@
 <h2>カレンダーボード</h2>
 <div id="calendarBoard"></div>
 
-<button id="downloadCalendarPng">PNGで保存</button>
-
 
 <section id="monthControlSection">
   <h2>フォント・背景の設定・ボード追加/削除
@@ -117,7 +123,7 @@
         <button id="deleteMonth">月削除</button>
         <br>
 
-        <h3>フォント設定</h3><br>
+        <h3>フォント設定（各月共通）</h3><br>
         <label>
           文字サイズ
           <input
@@ -156,7 +162,7 @@
             </label>
         </div>
         
-        <h3>背景画像設定</h3><br>
+        <h3>背景画像設定（選択した月ごと）</h3><br>
         <label>　背景画像アップロード:
             <input type="file" id="bgUpload" accept="image/*">
         </label>
